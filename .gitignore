@@ -3,7 +3,6 @@ node_modules/
 
 # 构建产物
 dist/
-out/
 src-tauri/target/
 playwright-report/
 test-results/

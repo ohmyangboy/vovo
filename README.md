@@ -166,4 +166,4 @@ uv run --no-project --with numpy --with soundfile --with lameenc --with tqdm \
 
 vovo 自有代码采用 [MIT License](LICENSE)，欢迎使用、修改和贡献。主要第三方组件、模型来源与运行时工具的许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。使用声音克隆前请确认授权，不冒充他人或侵害声音权利。
 
-产品介绍页面使用 Paper Blog CLI 的本地项目模式：在项目根目录执行 `paper -l serve`。Markdown 位于 `posts/`，静态构建输出到 `out/`，详见 [网站说明](docs/WEBSITE.md)。
+产品介绍网站：[ohmyangboy.github.io/vovo](https://ohmyangboy.github.io/vovo/)。使用 Paper Blog CLI 的本地项目模式，在项目根目录执行 `paper -l serve` 可预览。Markdown 位于 `posts/`，静态构建输出到 `out/`，发布步骤见 [网站说明](docs/WEBSITE.md)。

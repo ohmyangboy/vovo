@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>vovo @ohmyangboy</title><link>https://ohmyangboy.github.io/vovo/</link><description>vovo @ohmyangboy 的最新文章</description><language>zh-CN</language><generator>Paper Blog</generator><atom:link href="https://ohmyangboy.github.io/vovo/rss.xml" rel="self" type="application/rss+xml" /><dc:creator>ohmyangboy</dc:creator><image><url>https://ohmyangboy.github.io/vovo/assets/vovo-logo.png</url><title>vovo @ohmyangboy</title><link>https://ohmyangboy.github.io/vovo/</link></image><item><title>安装与使用</title><link>https://ohmyangboy.github.io/vovo/posts/getting-started/</link><guid isPermaLink="true">https://ohmyangboy.github.io/vovo/posts/getting-started/</guid><pubDate>Sat, 10 Oct 2026 00:00:00 GMT</pubDate><dc:creator>ohmyangboy</dc:creator><description>&lt;p&gt;&lt;strong&gt;【WIP】这是一个构建中的项目，功能与体验仍在持续完善。&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2&gt;从源码开始&lt;/h2&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;当前可以从 &lt;a href=&quot;https://github.com/ohmyangboy/vovo&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;GitHub&lt;/a&gt; 获取源码运行。需要 Node.js 22.18+、Rust stable 和所在平台的 Tauri 构建依赖；macOS 还需要 Xcode Command Line Tools。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;span class=&quot;syntax-highlight&quot;&gt;git&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;clone&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;https://github.com/ohmyangboy/vovo.git
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;vovo
+npm&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;install
+npm&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;run&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;tauri&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;dev
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;完整的平台依赖和构建说明见 &lt;a href=&quot;https://github.com/ohmyangboy/vovo#%E5%BC%80%E5%8F%91%E4%B8%8E%E6%9E%84%E5%BB%BA&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;项目 README&lt;/a&gt;。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;预设配音面向 macOS、Windows 与 Linux；本地声音克隆目前仅支持 Apple Silicon Mac。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2&gt;第一段配音&lt;/h2&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;ol&gt;
+&lt;li&gt;打开「设置」，点击「检查并准备」，下载所需资源。首次准备需要联网，完成后可以离线使用。&lt;/li&gt;
+&lt;li&gt;回到「生成工作台」，输入文稿，选择声音与语速。&lt;/li&gt;
+&lt;li&gt;先试听文稿，确认后点击「生成配音」。&lt;/li&gt;
+&lt;li&gt;播放结果，按需校对字幕，再导出。默认导出 MP3 + SRT，也可选择 WAV / TXT。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;生成结果保存在本机记录中。再次导出或调整导出格式不需要重新生成；字幕是句级时间轴，修改字幕文字不会改变朗读内容。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2&gt;创建我的声音&lt;/h2&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;在声音选择中点击「创建我的声音」，先确认声音授权，再导入 WAV、MP3、M4A、FLAC 或 AIFF 录音。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;选择 3–20 秒清晰人声，避免背景音乐；核对识别文字后命名并保存。朗读英文时，英文参考录音更合适。录音与文字默认保存在本机，保存后不依赖原始录音文件。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2&gt;只看界面&lt;/h2&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;span class=&quot;syntax-highlight&quot;&gt;npm&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;run&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;dev
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;网页预览可以编辑文稿、浏览声音目录和保存草稿。真实配音、声音克隆与文件导出需要桌面应用。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/ohmyangboy/vovo#readme&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;查看完整项目说明&lt;/a&gt; · &lt;a href=&quot;https://github.com/ohmyangboy/vovo/issues&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;反馈问题&lt;/a&gt;&lt;/p&gt;
+</description><content:encoded>&lt;p&gt;&lt;strong&gt;【WIP】这是一个构建中的项目，功能与体验仍在持续完善。&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2&gt;从源码开始&lt;/h2&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;当前可以从 &lt;a href=&quot;https://github.com/ohmyangboy/vovo&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;GitHub&lt;/a&gt; 获取源码运行。需要 Node.js 22.18+、Rust stable 和所在平台的 Tauri 构建依赖；macOS 还需要 Xcode Command Line Tools。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;span class=&quot;syntax-highlight&quot;&gt;git&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;clone&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;https://github.com/ohmyangboy/vovo.git
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;vovo
+npm&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;install
+npm&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;run&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;tauri&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;dev
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;完整的平台依赖和构建说明见 &lt;a href=&quot;https://github.com/ohmyangboy/vovo#%E5%BC%80%E5%8F%91%E4%B8%8E%E6%9E%84%E5%BB%BA&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;项目 README&lt;/a&gt;。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;预设配音面向 macOS、Windows 与 Linux；本地声音克隆目前仅支持 Apple Silicon Mac。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2&gt;第一段配音&lt;/h2&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;ol&gt;
+&lt;li&gt;打开「设置」，点击「检查并准备」，下载所需资源。首次准备需要联网，完成后可以离线使用。&lt;/li&gt;
+&lt;li&gt;回到「生成工作台」，输入文稿，选择声音与语速。&lt;/li&gt;
+&lt;li&gt;先试听文稿，确认后点击「生成配音」。&lt;/li&gt;
+&lt;li&gt;播放结果，按需校对字幕，再导出。默认导出 MP3 + SRT，也可选择 WAV / TXT。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;生成结果保存在本机记录中。再次导出或调整导出格式不需要重新生成；字幕是句级时间轴，修改字幕文字不会改变朗读内容。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2&gt;创建我的声音&lt;/h2&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;在声音选择中点击「创建我的声音」，先确认声音授权，再导入 WAV、MP3、M4A、FLAC 或 AIFF 录音。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;选择 3–20 秒清晰人声，避免背景音乐；核对识别文字后命名并保存。朗读英文时，英文参考录音更合适。录音与文字默认保存在本机，保存后不依赖原始录音文件。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2&gt;只看界面&lt;/h2&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;&lt;span class=&quot;syntax-highlight&quot;&gt;npm&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;run&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;dev
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;网页预览可以编辑文稿、浏览声音目录和保存草稿。真实配音、声音克隆与文件导出需要桌面应用。&lt;/p&gt;
+&lt;div class=&quot;markdown-blank-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/ohmyangboy/vovo#readme&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;查看完整项目说明&lt;/a&gt; · &lt;a href=&quot;https://github.com/ohmyangboy/vovo/issues&quot; target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;反馈问题&lt;/a&gt;&lt;/p&gt;
+</content:encoded></item></channel></rss>
