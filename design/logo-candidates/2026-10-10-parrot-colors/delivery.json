@@ -1,0 +1,69 @@
+{
+  "images": [
+    {
+      "label": "A1",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10-parrot-colors/A1.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "bytes": 1324328,
+      "sha256": "d4c2a5a58498c2129d23ca5c013af9b280759caa4a262c11e86f852fd1df0ba9"
+    },
+    {
+      "label": "A2",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10-parrot-colors/A2.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "bytes": 1241565,
+      "sha256": "cdea5af00475028e19f0cd4b61bcd5f0b3d83aa89a99b771879ad303b2b5a016"
+    },
+    {
+      "label": "A3",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10-parrot-colors/A3.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "bytes": 1290026,
+      "sha256": "d7f8db3ec3159ba2c9b7c5ceb569703519592485393918d070a94d77986e3330"
+    },
+    {
+      "label": "A4",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10-parrot-colors/A4.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "bytes": 1240747,
+      "sha256": "2e9eb50ed6deaa19aa5c493ea9434d05488a5950583adcad3f8d4e99427d116a"
+    },
+    {
+      "label": "A5",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10-parrot-colors/A5.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "bytes": 1339762,
+      "sha256": "8d82f079b21fab20186f9b43b8bdbc7e2f37d3e4138655337d9fc31ba09f28d2"
+    },
+    {
+      "label": "A6",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10-parrot-colors/A6.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "bytes": 1233349,
+      "sha256": "5eaec4f7a7a61fcdb7b19ed3467ac657999874c6b5cf304a4976cf508a8dd064"
+    }
+  ],
+  "provider": "OpenAI built-in image_gen",
+  "model": "not exposed by tool",
+  "mode": "reference-based color edits",
+  "constraintDelivery": "main-prompt constraints",
+  "originalsPreserved": true
+}

@@ -4,6 +4,10 @@ node_modules/
 # 构建产物
 dist/
 src-tauri/target/
+playwright-report/
+test-results/
+__pycache__/
+*.pyc
 
 # 日志与临时文件
 *.log

@@ -1,0 +1,139 @@
+{
+  "product": "VoiceStudio / 配音工坊",
+  "brief": "本地配音与声音克隆。用户选择了鹦鹉，当前只比较配色，保留已有 B1/B2 造型。",
+  "generation": {
+    "provider": "OpenAI built-in image_gen",
+    "model": "not exposed by tool",
+    "mode": "reference-based color edits",
+    "constraintDelivery": "main-prompt constraints",
+    "constraints": "Use no text or watermark. Add no borders, frames, cards, or presentation masks. Include one character only, with no extra subjects or scenery. Use no fragile lines, sharp tips, unnecessary outlines, tiny details, or decorative marks. Add no photorealistic material, dramatic bevel, glossy hotspot, deep occlusion, extrusion, strong three-dimensional rendering, or external cast shadow. Keep the background solid and uniform, with no texture, vignette, or lighting variation.",
+    "requestedDimensions": [
+      1536,
+      1536
+    ],
+    "independentCalls": true,
+    "postProcessing": false
+  },
+  "candidates": [
+    {
+      "label": "A1",
+      "name": "清新青绿",
+      "body": "#4FBE91",
+      "feature": "#1B5557",
+      "background": "#E5C6AF",
+      "bgName": "gently muted warm apricot",
+      "bodyName": "fresh emerald green",
+      "featureName": "deep teal",
+      "rationale": "亲近自然，配音伙伴的轻松感",
+      "direction": "圆嘴小鹦鹉",
+      "corner": "lower-left",
+      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B1.png",
+      "colors": {
+        "body": "#4FBE91",
+        "feature": "#1B5557",
+        "background": "#E5C6AF"
+      },
+      "prompt": "Edit the referenced square image to create one complete full-bleed 1:1 square image, approximately 1536 × 1536.\nEdit goal: change the color palette only. Preserve the existing cute baby parrot's exact silhouette, broad beak shape, body proportions, both wings, face, pose, expression, crop and framing. Do not redesign or add any feature. Preserve the existing assigned lower-left composition.\nBackground: fill the entire square with solid gently muted warm apricot (#E5C6AF). Keep this background visible in every open area and in the corners not occupied by the character; the assigned emergence corner must be occupied by the character.\nSubject: preserve the one extremely simplified, cute, endearing front-facing baby parrot IP character on the background, with its soft rounded continuous silhouette and one defining broad blunt rounded beak.\nComplexity: retain only the existing large basic shapes and at most two broad internal color regions. Keep the existing two simple eyes and existing tiny mouth if present, without introducing any new details, lines, outlines, anatomy, texture or decoration. Keep the character readable at 32 × 32.\nColor behavior: use exactly three semantic colors in the complete image: fresh emerald green (#4FBE91) for the main parrot body, deep teal (#1B5557) for one broad continuous beak region and the facial marks, and the specified background color. Organize the two IP colors into the existing broad purposeful masses. Reuse the two IP color families for any existing facial details rather than adding a separate white, black or other semantic color. Keep clear visual separation between the body, facial marks and background. Treat color families semantically; preserve the original gentle surface treatment without adding extra decorative regions.\nComposition: keep the existing character upright and emerging from the assigned lower-left, visually dominant at about 85–95% of the square. Preserve both existing wings and the original crop. Never center or bottom-center the character.\nStyle: make simplification, cuteness, and lovable baby-like appeal the strongest qualities. Keep the existing large soft forms, compact proportions, thick rounded contours and clean graphic treatment. Add an extremely, extremely subtle, almost imperceptible sense of depth through a barely-there neo-skeuomorphic treatment.\nFinish: show only the existing recolored parrot on the full-canvas background, with clean surfaces and normal square outer corners.\nConstraints: Use no text or watermark. Add no borders, frames, cards, or presentation masks. Include one character only, with no extra subjects or scenery. Use no fragile lines, sharp tips, unnecessary outlines, tiny details, or decorative marks. Add no photorealistic material, dramatic bevel, glossy hotspot, deep occlusion, extrusion, strong three-dimensional rendering, or external cast shadow. Keep the background solid and uniform, with no texture, vignette, or lighting variation."
+    },
+    {
+      "label": "A2",
+      "name": "湖蓝靛紫",
+      "body": "#53C3C6",
+      "feature": "#433369",
+      "background": "#E6C8B9",
+      "bgName": "gently muted peach",
+      "bodyName": "clear lagoon turquoise",
+      "featureName": "deep indigo",
+      "rationale": "清晰、轻快的声音创作",
+      "direction": "圆嘴小鹦鹉",
+      "corner": "lower-right",
+      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B2.png",
+      "colors": {
+        "body": "#53C3C6",
+        "feature": "#433369",
+        "background": "#E6C8B9"
+      },
+      "prompt": "Edit the referenced square image to create one complete full-bleed 1:1 square image, approximately 1536 × 1536.\nEdit goal: change the color palette only. Preserve the existing cute baby parrot's exact silhouette, broad beak shape, body proportions, both wings, face, pose, expression, crop and framing. Do not redesign or add any feature. Preserve the existing assigned lower-right composition.\nBackground: fill the entire square with solid gently muted peach (#E6C8B9). Keep this background visible in every open area and in the corners not occupied by the character; the assigned emergence corner must be occupied by the character.\nSubject: preserve the one extremely simplified, cute, endearing front-facing baby parrot IP character on the background, with its soft rounded continuous silhouette and one defining broad blunt rounded beak.\nComplexity: retain only the existing large basic shapes and at most two broad internal color regions. Keep the existing two simple eyes and existing tiny mouth if present, without introducing any new details, lines, outlines, anatomy, texture or decoration. Keep the character readable at 32 × 32.\nColor behavior: use exactly three semantic colors in the complete image: clear lagoon turquoise (#53C3C6) for the main parrot body, deep indigo (#433369) for one broad continuous beak region and the facial marks, and the specified background color. Organize the two IP colors into the existing broad purposeful masses. Reuse the two IP color families for any existing facial details rather than adding a separate white, black or other semantic color. Keep clear visual separation between the body, facial marks and background. Treat color families semantically; preserve the original gentle surface treatment without adding extra decorative regions.\nComposition: keep the existing character upright and emerging from the assigned lower-right, visually dominant at about 85–95% of the square. Preserve both existing wings and the original crop. Never center or bottom-center the character.\nStyle: make simplification, cuteness, and lovable baby-like appeal the strongest qualities. Keep the existing large soft forms, compact proportions, thick rounded contours and clean graphic treatment. Add an extremely, extremely subtle, almost imperceptible sense of depth through a barely-there neo-skeuomorphic treatment.\nFinish: show only the existing recolored parrot on the full-canvas background, with clean surfaces and normal square outer corners.\nConstraints: Use no text or watermark. Add no borders, frames, cards, or presentation masks. Include one character only, with no extra subjects or scenery. Use no fragile lines, sharp tips, unnecessary outlines, tiny details, or decorative marks. Add no photorealistic material, dramatic bevel, glossy hotspot, deep occlusion, extrusion, strong three-dimensional rendering, or external cast shadow. Keep the background solid and uniform, with no texture, vignette, or lighting variation."
+    },
+    {
+      "label": "A3",
+      "name": "奶黄莓紫",
+      "body": "#F6D56A",
+      "feature": "#683D78",
+      "background": "#BAC5DE",
+      "bgName": "gently muted periwinkle blue",
+      "bodyName": "warm butter yellow",
+      "featureName": "deep berry purple",
+      "rationale": "保留小鹦鹉的活泼与辨识度",
+      "direction": "圆嘴小鹦鹉",
+      "corner": "lower-left",
+      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B1.png",
+      "colors": {
+        "body": "#F6D56A",
+        "feature": "#683D78",
+        "background": "#BAC5DE"
+      },
+      "prompt": "Edit the referenced square image to create one complete full-bleed 1:1 square image, approximately 1536 × 1536.\nEdit goal: change the color palette only. Preserve the existing cute baby parrot's exact silhouette, broad beak shape, body proportions, both wings, face, pose, expression, crop and framing. Do not redesign or add any feature. Preserve the existing assigned lower-left composition.\nBackground: fill the entire square with solid gently muted periwinkle blue (#BAC5DE). Keep this background visible in every open area and in the corners not occupied by the character; the assigned emergence corner must be occupied by the character.\nSubject: preserve the one extremely simplified, cute, endearing front-facing baby parrot IP character on the background, with its soft rounded continuous silhouette and one defining broad blunt rounded beak.\nComplexity: retain only the existing large basic shapes and at most two broad internal color regions. Keep the existing two simple eyes and existing tiny mouth if present, without introducing any new details, lines, outlines, anatomy, texture or decoration. Keep the character readable at 32 × 32.\nColor behavior: use exactly three semantic colors in the complete image: warm butter yellow (#F6D56A) for the main parrot body, deep berry purple (#683D78) for one broad continuous beak region and the facial marks, and the specified background color. Organize the two IP colors into the existing broad purposeful masses. Reuse the two IP color families for any existing facial details rather than adding a separate white, black or other semantic color. Keep clear visual separation between the body, facial marks and background. Treat color families semantically; preserve the original gentle surface treatment without adding extra decorative regions.\nComposition: keep the existing character upright and emerging from the assigned lower-left, visually dominant at about 85–95% of the square. Preserve both existing wings and the original crop. Never center or bottom-center the character.\nStyle: make simplification, cuteness, and lovable baby-like appeal the strongest qualities. Keep the existing large soft forms, compact proportions, thick rounded contours and clean graphic treatment. Add an extremely, extremely subtle, almost imperceptible sense of depth through a barely-there neo-skeuomorphic treatment.\nFinish: show only the existing recolored parrot on the full-canvas background, with clean surfaces and normal square outer corners.\nConstraints: Use no text or watermark. Add no borders, frames, cards, or presentation masks. Include one character only, with no extra subjects or scenery. Use no fragile lines, sharp tips, unnecessary outlines, tiny details, or decorative marks. Add no photorealistic material, dramatic bevel, glossy hotspot, deep occlusion, extrusion, strong three-dimensional rendering, or external cast shadow. Keep the background solid and uniform, with no texture, vignette, or lighting variation."
+    },
+    {
+      "label": "A4",
+      "name": "珊瑚酒红",
+      "body": "#F09B85",
+      "feature": "#66334A",
+      "background": "#BED7D7",
+      "bgName": "gently muted aqua",
+      "bodyName": "soft lively coral",
+      "featureName": "deep burgundy",
+      "rationale": "温暖、友好的创作伙伴",
+      "direction": "圆嘴小鹦鹉",
+      "corner": "lower-right",
+      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B2.png",
+      "colors": {
+        "body": "#F09B85",
+        "feature": "#66334A",
+        "background": "#BED7D7"
+      },
+      "prompt": "Edit the referenced square image to create one complete full-bleed 1:1 square image, approximately 1536 × 1536.\nEdit goal: change the color palette only. Preserve the existing cute baby parrot's exact silhouette, broad beak shape, body proportions, both wings, face, pose, expression, crop and framing. Do not redesign or add any feature. Preserve the existing assigned lower-right composition.\nBackground: fill the entire square with solid gently muted aqua (#BED7D7). Keep this background visible in every open area and in the corners not occupied by the character; the assigned emergence corner must be occupied by the character.\nSubject: preserve the one extremely simplified, cute, endearing front-facing baby parrot IP character on the background, with its soft rounded continuous silhouette and one defining broad blunt rounded beak.\nComplexity: retain only the existing large basic shapes and at most two broad internal color regions. Keep the existing two simple eyes and existing tiny mouth if present, without introducing any new details, lines, outlines, anatomy, texture or decoration. Keep the character readable at 32 × 32.\nColor behavior: use exactly three semantic colors in the complete image: soft lively coral (#F09B85) for the main parrot body, deep burgundy (#66334A) for one broad continuous beak region and the facial marks, and the specified background color. Organize the two IP colors into the existing broad purposeful masses. Reuse the two IP color families for any existing facial details rather than adding a separate white, black or other semantic color. Keep clear visual separation between the body, facial marks and background. Treat color families semantically; preserve the original gentle surface treatment without adding extra decorative regions.\nComposition: keep the existing character upright and emerging from the assigned lower-right, visually dominant at about 85–95% of the square. Preserve both existing wings and the original crop. Never center or bottom-center the character.\nStyle: make simplification, cuteness, and lovable baby-like appeal the strongest qualities. Keep the existing large soft forms, compact proportions, thick rounded contours and clean graphic treatment. Add an extremely, extremely subtle, almost imperceptible sense of depth through a barely-there neo-skeuomorphic treatment.\nFinish: show only the existing recolored parrot on the full-canvas background, with clean surfaces and normal square outer corners.\nConstraints: Use no text or watermark. Add no borders, frames, cards, or presentation masks. Include one character only, with no extra subjects or scenery. Use no fragile lines, sharp tips, unnecessary outlines, tiny details, or decorative marks. Add no photorealistic material, dramatic bevel, glossy hotspot, deep occlusion, extrusion, strong three-dimensional rendering, or external cast shadow. Keep the background solid and uniform, with no texture, vignette, or lighting variation."
+    },
+    {
+      "label": "A5",
+      "name": "紫罗兰薄荷",
+      "body": "#A38AE2",
+      "feature": "#432866",
+      "background": "#BED8CA",
+      "bgName": "gently muted mint green",
+      "bodyName": "clear violet lavender",
+      "featureName": "deep plum",
+      "rationale": "呼应 VoiceStudio 的紫色界面",
+      "direction": "圆嘴小鹦鹉",
+      "corner": "lower-left",
+      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B1.png",
+      "colors": {
+        "body": "#A38AE2",
+        "feature": "#432866",
+        "background": "#BED8CA"
+      },
+      "prompt": "Edit the referenced square image to create one complete full-bleed 1:1 square image, approximately 1536 × 1536.\nEdit goal: change the color palette only. Preserve the existing cute baby parrot's exact silhouette, broad beak shape, body proportions, both wings, face, pose, expression, crop and framing. Do not redesign or add any feature. Preserve the existing assigned lower-left composition.\nBackground: fill the entire square with solid gently muted mint green (#BED8CA). Keep this background visible in every open area and in the corners not occupied by the character; the assigned emergence corner must be occupied by the character.\nSubject: preserve the one extremely simplified, cute, endearing front-facing baby parrot IP character on the background, with its soft rounded continuous silhouette and one defining broad blunt rounded beak.\nComplexity: retain only the existing large basic shapes and at most two broad internal color regions. Keep the existing two simple eyes and existing tiny mouth if present, without introducing any new details, lines, outlines, anatomy, texture or decoration. Keep the character readable at 32 × 32.\nColor behavior: use exactly three semantic colors in the complete image: clear violet lavender (#A38AE2) for the main parrot body, deep plum (#432866) for one broad continuous beak region and the facial marks, and the specified background color. Organize the two IP colors into the existing broad purposeful masses. Reuse the two IP color families for any existing facial details rather than adding a separate white, black or other semantic color. Keep clear visual separation between the body, facial marks and background. Treat color families semantically; preserve the original gentle surface treatment without adding extra decorative regions.\nComposition: keep the existing character upright and emerging from the assigned lower-left, visually dominant at about 85–95% of the square. Preserve both existing wings and the original crop. Never center or bottom-center the character.\nStyle: make simplification, cuteness, and lovable baby-like appeal the strongest qualities. Keep the existing large soft forms, compact proportions, thick rounded contours and clean graphic treatment. Add an extremely, extremely subtle, almost imperceptible sense of depth through a barely-there neo-skeuomorphic treatment.\nFinish: show only the existing recolored parrot on the full-canvas background, with clean surfaces and normal square outer corners.\nConstraints: Use no text or watermark. Add no borders, frames, cards, or presentation masks. Include one character only, with no extra subjects or scenery. Use no fragile lines, sharp tips, unnecessary outlines, tiny details, or decorative marks. Add no photorealistic material, dramatic bevel, glossy hotspot, deep occlusion, extrusion, strong three-dimensional rendering, or external cast shadow. Keep the background solid and uniform, with no texture, vignette, or lighting variation."
+    },
+    {
+      "label": "A6",
+      "name": "奶油淡紫",
+      "body": "#F6DFAA",
+      "feature": "#49346D",
+      "background": "#C1B3D6",
+      "bgName": "gently muted lilac",
+      "bodyName": "warm cream yellow",
+      "featureName": "deep purple",
+      "rationale": "柔和、安心的本地声音工具",
+      "direction": "圆嘴小鹦鹉",
+      "corner": "lower-right",
+      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B2.png",
+      "colors": {
+        "body": "#F6DFAA",
+        "feature": "#49346D",
+        "background": "#C1B3D6"
+      },
+      "prompt": "Edit the referenced square image to create one complete full-bleed 1:1 square image, approximately 1536 × 1536.\nEdit goal: change the color palette only. Preserve the existing cute baby parrot's exact silhouette, broad beak shape, body proportions, both wings, face, pose, expression, crop and framing. Do not redesign or add any feature. Preserve the existing assigned lower-right composition.\nBackground: fill the entire square with solid gently muted lilac (#C1B3D6). Keep this background visible in every open area and in the corners not occupied by the character; the assigned emergence corner must be occupied by the character.\nSubject: preserve the one extremely simplified, cute, endearing front-facing baby parrot IP character on the background, with its soft rounded continuous silhouette and one defining broad blunt rounded beak.\nComplexity: retain only the existing large basic shapes and at most two broad internal color regions. Keep the existing two simple eyes and existing tiny mouth if present, without introducing any new details, lines, outlines, anatomy, texture or decoration. Keep the character readable at 32 × 32.\nColor behavior: use exactly three semantic colors in the complete image: warm cream yellow (#F6DFAA) for the main parrot body, deep purple (#49346D) for one broad continuous beak region and the facial marks, and the specified background color. Organize the two IP colors into the existing broad purposeful masses. Reuse the two IP color families for any existing facial details rather than adding a separate white, black or other semantic color. Keep clear visual separation between the body, facial marks and background. Treat color families semantically; preserve the original gentle surface treatment without adding extra decorative regions.\nComposition: keep the existing character upright and emerging from the assigned lower-right, visually dominant at about 85–95% of the square. Preserve both existing wings and the original crop. Never center or bottom-center the character.\nStyle: make simplification, cuteness, and lovable baby-like appeal the strongest qualities. Keep the existing large soft forms, compact proportions, thick rounded contours and clean graphic treatment. Add an extremely, extremely subtle, almost imperceptible sense of depth through a barely-there neo-skeuomorphic treatment.\nFinish: show only the existing recolored parrot on the full-canvas background, with clean surfaces and normal square outer corners.\nConstraints: Use no text or watermark. Add no borders, frames, cards, or presentation masks. Include one character only, with no extra subjects or scenery. Use no fragile lines, sharp tips, unnecessary outlines, tiny details, or decorative marks. Add no photorealistic material, dramatic bevel, glossy hotspot, deep occlusion, extrusion, strong three-dimensional rendering, or external cast shadow. Keep the background solid and uniform, with no texture, vignette, or lighting variation."
+    }
+  ]
+}

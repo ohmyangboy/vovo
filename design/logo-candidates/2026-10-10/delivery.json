@@ -1,0 +1,56 @@
+{
+  "images": [
+    {
+      "label": "A1",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/A1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1260384,
+      "sha256": "f0148f5c8b19e1a1830414ff1794776b778c88fa5e37be91784227f14d8ef3cb"
+    },
+    {
+      "label": "A2",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/A2.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1311353,
+      "sha256": "916ebf650fac5c075ed839981bf20e05a81f946de4a0bea87d1c75e0e060a9a1"
+    },
+    {
+      "label": "B1",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1333334,
+      "sha256": "19874f4844ccba77271c2697194d2455e516ecefabdc5022566558e1cc231a01"
+    },
+    {
+      "label": "B2",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B2.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1243111,
+      "sha256": "0f9726fa9fb720f727b92f92c8a274305dd49c376934fe34bb7cd822756bace0"
+    },
+    {
+      "label": "C1",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/C1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1284352,
+      "sha256": "fb78899bf281171db1dd58a6addd467a5ccb8e87fabb47b3ca64e453a4985853"
+    },
+    {
+      "label": "C2",
+      "path": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/C2.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1287906,
+      "sha256": "68e30d649ab32122a15deb4bdc3cf654fe02eb18bbee5c84e8fbbbffe58a1db2"
+    }
+  ],
+  "provider": "OpenAI built-in image_gen",
+  "model": "not exposed by tool",
+  "constraint_delivery": "main-prompt constraints",
+  "originals_preserved": true
+}

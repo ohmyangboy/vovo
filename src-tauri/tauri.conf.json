@@ -13,21 +13,23 @@
     "windows": [
       {
         "title": "配音工坊",
-        "width": 880,
-        "height": 780,
+        "width": 1120,
+        "height": 820,
         "minWidth": 720,
         "minHeight": 620,
         "center": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data:; media-src 'self' asset: http://asset.localhost blob:; connect-src ipc: http://ipc.localhost 'self'; object-src 'none'; base-uri 'self'",
+      "devCsp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data:; media-src 'self' asset: http://asset.localhost blob:; connect-src ipc: http://ipc.localhost 'self' ws://localhost:1420 ws://127.0.0.1:1420; object-src 'none'; base-uri 'self'",
+      "assetProtocol": { "enable": true, "scope": [] }
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
-    "resources": ["resources/engine.py"],
+    "resources": ["resources/engine.py", "resources/clone_engine.py", "resources/text_processing.py", "resources/artifacts.py", "resources/transcription.py"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
