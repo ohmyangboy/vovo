@@ -1,5 +1,5 @@
 {
-  "product": "VoiceStudio",
+  "product": "vovo",
   "selectedCandidate": "A6",
   "colorway": "奶油淡紫",
   "source": "logo-candidates/2026-10-10-parrot-colors/A6.png",
@@ -8,6 +8,6 @@
   "beakAndFaceColor": "#49346D",
   "backgroundColor": "#C1B3D6",
   "desktopIcons": "../src-tauri/icons",
-  "interfaceLogo": "../public/voicestudio-logo.png",
+  "interfaceLogo": "../public/vovo-logo.png",
   "favicon": "../public/favicon.png"
 }

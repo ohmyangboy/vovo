@@ -10,6 +10,8 @@ export function AudioPlayer({
   seekRequest,
   compact = false,
   autoPlay = false,
+  onFinished,
+  onInterrupted,
 }: {
   path: string;
   duration?: number;
@@ -17,6 +19,8 @@ export function AudioPlayer({
   seekRequest?: { time: number; id: number };
   compact?: boolean;
   autoPlay?: boolean;
+  onFinished?: () => void;
+  onInterrupted?: () => void;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -26,14 +30,18 @@ export function AudioPlayer({
   const [rate, setRate] = useState(1);
   const callback = useRef(onTimeChange);
   callback.current = onTimeChange;
+  const lifecycle = useRef({ onFinished, onInterrupted });
+  lifecycle.current = { onFinished, onInterrupted };
   useEffect(() => {
     const stopOthers = (event: Event) => {
-      if ((event as CustomEvent).detail !== audio.current)
+      if ((event as CustomEvent).detail !== audio.current) {
         audio.current?.pause();
+        lifecycle.current.onInterrupted?.();
+      }
     };
-    window.addEventListener("voicestudio-play", stopOthers);
+    window.addEventListener("vovo-play", stopOthers);
     return () => {
-      window.removeEventListener("voicestudio-play", stopOthers);
+      window.removeEventListener("vovo-play", stopOthers);
     };
   }, []);
   useEffect(() => {
@@ -42,9 +50,14 @@ export function AudioPlayer({
     setDuration(expectedDuration);
     setError("");
     setRate(1);
-    if (audio.current) audio.current.playbackRate = 1;
+    const element = audio.current;
+    let active = true;
+    if (element) element.playbackRate = 1;
     if (autoPlay)
-      void audio.current?.play().catch(() => setError("点击播放即可试听"));
+      void element?.play().catch((error: unknown) => {
+        if (active && !(error instanceof DOMException && error.name === "AbortError")) setError("点击播放即可试听");
+      });
+    return () => { active = false; element?.pause(); };
   }, [path, autoPlay, expectedDuration]);
   useEffect(() => {
     if (seekRequest && audio.current) {
@@ -74,12 +87,13 @@ export function AudioPlayer({
         preload="metadata"
         onPlay={() => {
           setPlaying(true);
+          setError("");
           window.dispatchEvent(
-            new CustomEvent("voicestudio-play", { detail: audio.current }),
+            new CustomEvent("vovo-play", { detail: audio.current }),
           );
         }}
         onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
+        onEnded={() => { setPlaying(false); lifecycle.current.onFinished?.(); }}
         onTimeUpdate={() => {
           const value = audio.current?.currentTime ?? 0;
           setTime(value);

@@ -1,5 +1,5 @@
 {
-  "product": "VoiceStudio / 配音工坊",
+  "product": "vovo",
   "brief": "给内容创作者使用的本地配音与声音克隆工具。简单、温暖、安心。现有界面偏紫色。",
   "generation": {
     "provider": "OpenAI built-in image_gen",

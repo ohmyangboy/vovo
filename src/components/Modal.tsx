@@ -26,10 +26,8 @@ export function Modal({
     const previous = document.activeElement as HTMLElement | null;
     const root = ref.current;
     root
-      ?.querySelector<HTMLElement>(
-        "input,button,select,textarea,[tabindex='0']",
-      )
-      ?.focus();
+      ?.querySelector<HTMLElement>("input,select,textarea")?.focus();
+    if (!root?.contains(document.activeElement)) root?.querySelector<HTMLElement>("button,summary,[tabindex='0']")?.focus();
     const key = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !locked.current) {
         event.preventDefault();
@@ -38,11 +36,12 @@ export function Modal({
       if (event.key !== "Tab" || !root) return;
       const elements = Array.from(
         root.querySelectorAll<HTMLElement>(
-          "button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex='0']",
+          "button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,[tabindex='0']",
         ),
       );
-      const first = elements[0],
-        last = elements[elements.length - 1];
+      const visible = elements.filter((element) => element.getClientRects().length > 0);
+      const first = visible[0],
+        last = visible[visible.length - 1];
       if (!root.contains(document.activeElement)) {
         event.preventDefault();
         (event.shiftKey ? last : first)?.focus();

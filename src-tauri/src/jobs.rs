@@ -97,7 +97,7 @@ pub async fn run(
         .env("OMP_NUM_THREADS", "2")
         .env("TOKENIZERS_PARALLELISM", "false")
         .env("HF_HUB_DISABLE_TELEMETRY", "1")
-        .env("VOICE_STUDIO_HOME", app_support_dir())
+        .env("VOVO_HOME", app_support_dir())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .kill_on_drop(true);

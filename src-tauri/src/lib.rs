@@ -1,12 +1,14 @@
 mod clone;
 mod jobs;
+mod migration;
 mod setup;
 mod studio;
-// 配音工坊 - 跨平台后端
+// vovo - 跨平台后端
 // macOS / Windows / Linux：管理本地 Python 引擎（venv + Kokoro TTS）
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
+use std::sync::OnceLock;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::io::{AsyncBufReadExt, BufReader};
 
@@ -40,25 +42,58 @@ fn home_dir() -> PathBuf {
     }
 }
 
-fn app_support_dir() -> PathBuf {
+fn app_support_parent() -> PathBuf {
     #[cfg(target_os = "macos")]
     {
-        home_dir().join("Library/Application Support/VoiceStudio")
+        home_dir().join("Library/Application Support")
     }
     #[cfg(target_os = "windows")]
     {
         std::env::var_os("APPDATA")
             .map(PathBuf::from)
             .unwrap_or_else(|| home_dir().join("AppData").join("Roaming"))
-            .join("VoiceStudio")
     }
     #[cfg(target_os = "linux")]
     {
         std::env::var_os("XDG_DATA_HOME")
             .map(PathBuf::from)
             .unwrap_or_else(|| home_dir().join(".local").join("share"))
-            .join("VoiceStudio")
     }
+}
+
+static SUPPORT_DIR: OnceLock<PathBuf> = OnceLock::new();
+fn app_support_dir() -> PathBuf {
+    SUPPORT_DIR
+        .get_or_init(|| app_support_parent().join("vovo"))
+        .clone()
+}
+
+fn migrate_existing_data() -> std::io::Result<()> {
+    #[cfg(target_os = "macos")]
+    let webview_parent = home_dir().join("Library/WebKit");
+    #[cfg(target_os = "windows")]
+    let webview_parent = std::env::var_os("LOCALAPPDATA")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| home_dir().join("AppData/Local"));
+    #[cfg(target_os = "linux")]
+    let webview_parent = app_support_parent();
+    #[cfg(target_os = "macos")]
+    if !webview_parent.join("local.vovo").exists()
+        && webview_parent.join("local.voicestudio").is_dir()
+        && std::process::Command::new("/usr/bin/pgrep")
+            .args(["-f", "/Contents/MacOS/voice-studio-app([[:space:]]|$)"])
+            .output()?
+            .status
+            .success()
+    {
+        return Err(std::io::Error::other(
+            "请先退出旧版 VoiceStudio，再打开 vovo；原数据已保留",
+        ));
+    }
+    migration::migrate_webview(&webview_parent)?;
+    let support = migration::migrate_data(&app_support_parent())?;
+    let _ = SUPPORT_DIR.set(support);
+    Ok(())
 }
 
 fn venv_dir() -> PathBuf {
@@ -196,7 +231,7 @@ fn configure_command(cmd: &mut tokio::process::Command) {
         .env("PYTHONUNBUFFERED", "1")
         .env("PYTHONDONTWRITEBYTECODE", "1")
         .env("VIRTUAL_ENV", venv_dir())
-        .env("VOICE_STUDIO_HOME", app_support_dir())
+        .env("VOVO_HOME", app_support_dir())
         .env("HF_HUB_DISABLE_TELEMETRY", "1");
     #[cfg(target_os = "windows")]
     {
@@ -225,7 +260,7 @@ async fn run_capture(
     }
     let mut cmd = tokio::process::Command::new(program);
     cmd.args(args)
-        .env("VOICE_STUDIO_HOME", app_support_dir())
+        .env("VOVO_HOME", app_support_dir())
         .env("PYTHONDONTWRITEBYTECODE", "1")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -653,6 +688,8 @@ fn default_output_dir(app: AppHandle) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // 必须先于 WebView 创建，避免空的新存储抢先覆盖旧偏好。
+    migrate_existing_data().expect("vovo 无法接续已有数据，原文件已保留");
     tauri::Builder::default()
         .setup(|app| {
             for folder in ["artifacts", "previews", "samples", "voices", "references"] {
@@ -679,6 +716,7 @@ pub fn run() {
             studio::transcribe_reference,
             studio::discard_reference,
             studio::save_voice,
+            studio::add_voice_reference,
             studio::delete_voice,
             studio::rename_voice,
             studio::generate_workspace,

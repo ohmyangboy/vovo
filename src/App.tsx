@@ -6,6 +6,9 @@ import { api, desktop } from "./api";
 import { initialModels, modelNames, voiceChoices } from "./catalog";
 import {
   characterCount,
+  estimatedDuration,
+  draftStorageKey,
+  preferencesStorageKey,
   importText,
   readDraft,
   readPreferences,
@@ -20,27 +23,24 @@ import type {
   ModelId,
   ModelInfo,
   Page,
+  PreviewPlayback,
   Preferences,
   SavedVoice,
   VoiceChoice,
 } from "./types";
 import { useJobs } from "./hooks/useJobs";
-import { Icon, type IconName } from "./components/Icon";
+import { Icon } from "./components/Icon";
 import { Modal } from "./components/Modal";
-import { AudioPlayer } from "./components/AudioPlayer";
 import { Workspace } from "./components/Workspace";
 import { VoiceBrowser } from "./components/VoiceBrowser";
 import { CloneWizard } from "./components/CloneWizard";
 import { ResultPanel } from "./components/ResultPanel";
 import { HistoryPage } from "./components/HistoryPage";
+import { SidebarHistory } from "./components/SidebarHistory";
+import { AppTitlebar } from "./components/AppTitlebar";
 import { SettingsPage, type ResourceAction } from "./components/SettingsPage";
 import { ExportDialog } from "./components/ExportDialog";
 
-const navigation: { id: Page; label: string; icon: IconName }[] = [
-  { id: "workspace", label: "生成工作台", icon: "edit" },
-  { id: "voices", label: "声音库", icon: "voices" },
-  { id: "history", label: "生成记录", icon: "clock" },
-];
 type Toast = {
   message: string;
   tone: "error" | "success" | "info";
@@ -67,6 +67,7 @@ export default function App() {
   const [historyId, setHistoryId] = useState<string>();
   const [picker, setPicker] = useState<{ model?: ModelId }>();
   const [cloneOpen, setCloneOpen] = useState(false);
+  const [editingVoice, setEditingVoice] = useState<SavedVoice>();
   const [exporting, setExporting] = useState<Bundle>();
   const [setup, setSetup] = useState<{ model: ModelId; voice: string }>();
   const [resourceTarget, setResourceTarget] = useState<string>();
@@ -74,16 +75,18 @@ export default function App() {
   const [renaming, setRenaming] = useState<VoiceChoice>();
   const [rename, setRename] = useState("");
   const [toast, setToast] = useState<Toast>();
-  const [playback, setPlayback] = useState<{
-    path: string;
-    name: string;
-    duration?: number;
-  }>();
+  const [playback, setPlayback] = useState<PreviewPlayback>();
   const [previewing, setPreviewing] = useState<string>();
   const [dragging, setDragging] = useState(false);
   const [startupLogs, setStartupLogs] = useState<string[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const previewCache = useRef(new Map<string, Bundle>());
+  const previewEpoch = useRef(0);
+  const previewOrigin = useRef<PreviewPlayback["origin"] | undefined>(undefined);
+  useEffect(() => {
+    previewEpoch.current += 1;
+    setPlayback(undefined);
+  }, [page]);
   const refreshVersion = useRef(0);
   const notify = useCallback(
     (message: string, tone: Toast["tone"] = "info") =>
@@ -195,9 +198,9 @@ export default function App() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
-        localStorage.setItem("voicestudio.draft.v1", JSON.stringify(draft));
+        localStorage.setItem(draftStorageKey, JSON.stringify(draft));
         localStorage.setItem(
-          "voicestudio.preferences.v1",
+          preferencesStorageKey,
           JSON.stringify(preferences),
         );
         setSaved(true);
@@ -208,9 +211,9 @@ export default function App() {
     }, 400);
     const flush = () => {
       try {
-        localStorage.setItem("voicestudio.draft.v1", JSON.stringify(draft));
+        localStorage.setItem(draftStorageKey, JSON.stringify(draft));
         localStorage.setItem(
-          "voicestudio.preferences.v1",
+          preferencesStorageKey,
           JSON.stringify(preferences),
         );
       } catch {
@@ -248,6 +251,20 @@ export default function App() {
     confirmation?.resolve(confirmed);
     setConfirmation(undefined);
   }
+  function dismissPreview() {
+    previewEpoch.current += 1;
+    setPlayback(undefined);
+  }
+  function closePicker() {
+    dismissPreview();
+    setPicker(undefined);
+    if (jobs.active?.kind === "preview" && previewOrigin.current === "voice") void jobs.cancel();
+  }
+  function openPicker() {
+    dismissPreview();
+    if (jobs.active?.kind === "preview") void jobs.cancel();
+    setPicker({});
+  }
   function chooseVoice(choice: VoiceChoice) {
     setPreferences((previous) => ({
       ...previous,
@@ -258,9 +275,8 @@ export default function App() {
     }));
     updateDraft({
       voiceKey: choice.key,
-      speed: choice.model === "clone" ? 1 : draft.speed,
     });
-    setPicker(undefined);
+    closePicker();
     setPage("workspace");
   }
   function toggleFavorite(key: string) {
@@ -292,6 +308,7 @@ export default function App() {
     return true;
   }
   function openClone() {
+    closePicker();
     if (!desktop) {
       notify("声音克隆需要桌面应用，网页仅支持界面预览", "info");
       return;
@@ -304,14 +321,26 @@ export default function App() {
       setSetup({ model: "clone", voice: "我的声音" });
       return;
     }
-    setPicker(undefined);
+    setEditingVoice(undefined);
     setCloneOpen(true);
+  }
+  function supplementVoice(choice: VoiceChoice) {
+    const savedVoice = library.find((item) => item.id === choice.id);
+    if (!savedVoice) return;
+    if ((savedVoice.references?.length ?? 0) >= 2) {
+      notify("这个声音已保留 3 段录音，可以先试听效果", "info");
+      return;
+    }
+    closePicker();
+    if (!canGenerate(choice)) return;
+    openClone();
+    setEditingVoice(savedVoice);
   }
   function goSettings(model?: string) {
     setResourceTarget(model);
     setSetup(undefined);
     setCloneOpen(false);
-    setPicker(undefined);
+    closePicker();
     setPage("settings");
   }
   async function reveal(path: string) {
@@ -364,11 +393,15 @@ export default function App() {
         tone: "success",
         path,
       });
+    } else if (!automatic) {
+      setExporting(bundle);
     }
   }
   async function generate() {
     if (!voice || busy || !draft.text.trim()) return;
     if (!canGenerate(voice)) return;
+    previewEpoch.current += 1;
+    setPlayback(undefined);
     const bundle = await jobs.run("generate", "准备生成配音", (id) =>
       api.generateWorkspace(id, {
         model: voice.model,
@@ -376,7 +409,7 @@ export default function App() {
         voiceName: voice.name,
         title: draft.title,
         text: draft.text,
-        speed: voice.model === "clone" ? 1 : draft.speed,
+        speed: draft.speed,
         preview: false,
       }),
     );
@@ -406,22 +439,36 @@ export default function App() {
         notify("配音已保留在生成记录中，请先在设置中选择自动导出位置", "info");
     }
   }
-  async function previewText(choice: VoiceChoice, text: string, speed = 1) {
+  async function previewText(choice: VoiceChoice, text: string, speed = 1, origin: PreviewPlayback["origin"] = "workspace") {
     if (!text.trim()) return;
-    const sample = Array.from(text.trim()).slice(0, 90).join("");
-    const cacheKey = JSON.stringify([choice.key, sample, speed]);
+    const limit = /[A-Za-z]/.test(text) && !/[\u3400-\u9fff]/.test(text) ? 320 : 90;
+    let sample = Array.from(text.trim()).slice(0, limit).join("");
+    if (sample.length < text.trim().length) {
+      const end = Math.max(sample.lastIndexOf("."), sample.lastIndexOf("!"), sample.lastIndexOf("?"), sample.lastIndexOf("。"), sample.lastIndexOf("！"), sample.lastIndexOf("？"));
+      if (end >= sample.length / 3) sample = sample.slice(0, end + 1);
+      else if (limit === 320 && sample.lastIndexOf(" ") > 0) sample = sample.slice(0, sample.lastIndexOf(" "));
+    }
+    const cacheKey = JSON.stringify([choice.key, sample, speed,
+      ...(choice.kind === "cloned" ? [library.find((item) => item.id === choice.id)?.references ?? []] : [])]);
     const cached = previewCache.current.get(cacheKey);
     if (cached) {
+      previewEpoch.current += 1;
       setPlayback({
         path: cached.wav,
         name: choice.name,
         duration: cached.duration,
+        startedAt: Date.now(),
+        origin,
+        voiceKey: choice.key,
       });
       return;
     }
     if (busy) return;
     if (!canGenerate(choice)) return;
+    const epoch = ++previewEpoch.current;
+    setPlayback(undefined);
     setPreviewing(choice.key);
+    previewOrigin.current = origin;
     try {
       const bundle = await jobs.run("preview", "准备短句试听", (id) =>
         api.generateWorkspace(id, {
@@ -430,27 +477,32 @@ export default function App() {
           voiceName: choice.name,
           title: "短句试听",
           text: sample,
-          speed: choice.model === "clone" ? 1 : speed,
+          speed,
           preview: true,
         }),
       );
       if (bundle) {
         previewCache.current.set(cacheKey, bundle);
-        setPlayback({
+        if (epoch === previewEpoch.current) setPlayback({
           path: bundle.wav,
           name: choice.name,
           duration: bundle.duration,
+          startedAt: Date.now(),
+          origin,
+          voiceKey: choice.key,
         });
-        if (characterCount(text) > 90)
-          notify("本次仅试听所选内容的前 90 字", "info");
+        if (characterCount(text) > characterCount(sample))
+          notify("本次试听文稿开头，完整配音请点击生成", "info");
       }
     } finally {
+      previewOrigin.current = undefined;
       setPreviewing(undefined);
     }
   }
   async function previewVoice(choice: VoiceChoice) {
     if (choice.previewAudio) {
-      setPlayback({ path: choice.previewAudio, name: choice.name, duration: choice.previewDuration });
+      previewEpoch.current += 1;
+      setPlayback({ path: choice.previewAudio, name: choice.name, duration: choice.previewDuration, startedAt: Date.now(), origin: "voice", voiceKey: choice.key });
       return;
     }
     if (choice.kind === "preset") {
@@ -463,6 +515,7 @@ export default function App() {
         ? "Hello. A familiar voice can bring every story to life."
         : "你好，让每一段文字，都拥有自己的声音。",
       1,
+      "voice",
     );
   }
   async function applyImported(title: string, text: string) {
@@ -743,7 +796,9 @@ export default function App() {
       setRecords((previous) =>
         previous.filter((item) => item.id !== bundle.id),
       );
-      if (historyId === bundle.id) setHistoryId(undefined);
+      const next = records.find((item) => item.id !== bundle.id);
+      setHistoryId((current) => current === bundle.id ? next?.id : current);
+      if (!next) setPage((current) => current === "history" ? "workspace" : current);
       if (result?.id === bundle.id) setResult(undefined);
       notify("生成记录已删除", "success");
     }
@@ -783,16 +838,30 @@ export default function App() {
       notify("字幕已保存，配音内容没有改变", "success");
     }
   }
-  function renderResult(bundle: Bundle, outdated = false) {
+  function renderResult(bundle?: Bundle, outdated = false, onPreview?: () => void) {
+    const count = characterCount(draft.text);
+    const limit = voice?.model === "clone" ? 2000 : 10000;
     return (
       <ResultPanel
+        key={bundle?.id ?? "draft"}
         bundle={bundle}
         outdated={outdated}
         busy={busy}
-        onExport={setExporting}
+        onExport={(item) => preferences.outputDir
+          ? void exportFiles(item, preferences.outputDir, preferences.formats)
+          : setExporting(item)}
+        onExportOptions={setExporting}
         onSaveCaptions={saveCaptions}
         onCopy={(text) => void copy(text)}
         onReveal={(path) => void reveal(path)}
+        summary={onPreview ? { count, limit, estimate: estimatedDuration(draft.text, draft.speed), saved } : undefined}
+        preview={onPreview && playback?.origin === "workspace" ? playback : undefined}
+        onDismissPreview={dismissPreview}
+        onPreview={onPreview}
+        onGenerate={onPreview ? () => void generate() : undefined}
+        canGenerate={!!voice && !!draft.text.trim() && count <= limit}
+        job={jobs.active}
+        onCancel={() => void jobs.cancel()}
       />
     );
   }
@@ -800,50 +869,28 @@ export default function App() {
     !!result &&
     (result.text !== draft.text.trim() ||
       `${result.model}:${result.voice}` !== draft.voiceKey ||
-      result.speed !== (voice?.model === "clone" ? 1 : draft.speed));
+      result.speed !== draft.speed);
 
   return (
     <div className="app-shell">
+      <AppTitlebar page={page} onSettings={() => goSettings()} />
       <aside className="sidebar">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            <img
-              src="/voicestudio-logo.png"
-              alt=""
-              width={41}
-              height={41}
-              draggable={false}
-            />
-          </span>
-          <div>
-            <strong>配音工坊</strong>
-            <span>VoiceStudio</span>
-          </div>
-        </div>
-        <div className="navigation-label">创作空间</div>
         <nav aria-label="主导航">
-          {navigation.map((item) => (
-            <button
-              key={item.id}
-              className={`nav-item${page === item.id ? " active" : ""}`}
-              aria-current={page === item.id ? "page" : undefined}
-              onClick={() => setPage(item.id)}
-            >
-              <Icon name={item.icon} size={19} />
-              <span>{item.label}</span>
-              {item.id === "history" && records.length > 0 && (
-                <small>{records.length}</small>
-              )}
-            </button>
-          ))}
+          <button className={`nav-item${page === "workspace" ? " active" : ""}`}
+            aria-current={page === "workspace" ? "page" : undefined}
+            onClick={() => setPage("workspace")}>
+            <Icon name="edit" size={19} /><span>生成工作台</span>
+          </button>
         </nav>
+        <SidebarHistory records={records} selected={page === "history" ? historyId : undefined}
+          onOpen={(record) => { dismissPreview(); setHistoryId(record.id); setPage("history"); }} />
         <div className="sidebar-bottom">
           {jobs.active && (
             <button
               className="sidebar-task"
               onClick={() =>
                 setPage(
-                  jobs.active?.kind === "generate" ? "workspace" : "settings",
+                  ["generate", "preview"].includes(jobs.active?.kind ?? "") ? "workspace" : "settings",
                 )
               }
             >
@@ -853,39 +900,15 @@ export default function App() {
               </span>
             </button>
           )}
-          <button
-            className={`nav-item${page === "settings" ? " active" : ""}`}
-            aria-current={page === "settings" ? "page" : undefined}
-            onClick={() => setPage("settings")}
-          >
-            <Icon name="settings" size={19} />
-            <span>设置</span>
-          </button>
-          <div className="sidebar-privacy">
-            <Icon name="shield" size={19} />
-            <div>
-              <strong>安心创作，留在本机</strong>
-              <span>文稿与声音资料不上传</span>
-            </div>
-          </div>
-          <div className="local-status">
-            <span className="local-dot" />
-            {desktop ? "本地模式" : "网页预览"}
-            <span className="local-version">VoiceStudio</span>
-          </div>
         </div>
       </aside>
-      <main className="main-content" key={page}>
+      <main className={`main-content${page === "settings" ? " settings-content" : " studio-content"}`} key={page}>
         {page === "workspace" && (
           <Workspace
             draft={draft}
             onDraft={updateDraft}
             voice={voice}
-            onChooseVoice={() => setPicker({})}
-            onChooseModel={(model) => {
-              if (model !== voice?.model) setPicker({ model });
-            }}
-            onClone={openClone}
+            onChooseVoice={openPicker}
             onImport={() => void pickFile()}
             onBrowserFile={(file) => void importBrowserFile(file)}
             onClear={() =>
@@ -896,70 +919,26 @@ export default function App() {
                 if (confirmed) updateDraft({ title: "", text: "" });
               })
             }
-            onGenerate={() => void generate()}
-            onExample={() => {
-              if (voice) void previewVoice(voice);
-            }}
             onPreview={(text) => {
               if (voice)
                 void previewText(
                   voice,
                   text,
-                  voice.model === "clone" ? 1 : draft.speed,
+                  draft.speed,
                 );
             }}
             job={jobs.active}
-            onCancel={() => void jobs.cancel()}
             dragging={dragging}
             saved={saved}
-          >
-            {result && renderResult(result, outdated)}
-          </Workspace>
+            renderFooter={(onPreview) => renderResult(result, outdated, onPreview)}
+          />
         )}
-        {page === "voices" && (
-          <section className="voices-page">
-            <header className="page-heading">
-              <div>
-                <span className="eyebrow">找到适合故事的声音</span>
-                <h1>声音库</h1>
-                <p>预设音色、收藏与私有克隆，在同一个地方管理。</p>
-              </div>
-              <span className="privacy-note">
-                <Icon name="shield" size={15} />
-                我的声音只属于你
-              </span>
-            </header>
-            <VoiceBrowser
-              voices={voices}
-              selected={draft.voiceKey}
-              favorites={preferences.favorites}
-              recent={preferences.recent}
-              busy={busy}
-              previewing={previewing}
-              preparation={jobs.active?.kind === "prepare" ? jobs.active : undefined}
-              onPrepare={() => goSettings()}
-              onChoose={chooseVoice}
-              onPreview={(choice) => void previewVoice(choice)}
-              onFavorite={toggleFavorite}
-              onClone={openClone}
-              onDelete={(choice) => void removeVoice(choice)}
-              onRename={(choice) => {
-                setRenaming(choice);
-                setRename(choice.name);
-              }}
-            />
-          </section>
-        )}
-        {page === "history" && (
+        {page === "history" && historySelection && (
           <HistoryPage
-            records={records}
             selected={historySelection}
             busy={busy}
-            onOpen={(record) => setHistoryId(record.id)}
             onUse={(record) => void useRecord(record)}
             onDelete={(record) => void removeRecord(record)}
-            onBack={() => setHistoryId(undefined)}
-            onWorkspace={() => setPage("workspace")}
             renderResult={renderResult}
           />
         )}
@@ -1007,9 +986,8 @@ export default function App() {
               ? `选择${modelNames[picker.model]}的声音`
               : "选择一个声音"
           }
-          description="试听、收藏，然后把喜欢的声音带回工作台。"
           wide
-          onClose={() => setPicker(undefined)}
+          onClose={closePicker}
         >
           <VoiceBrowser
             voices={voices}
@@ -1018,6 +996,8 @@ export default function App() {
             recent={preferences.recent}
             busy={busy}
             previewing={previewing}
+            playback={playback?.origin === "voice" ? playback : undefined}
+            onDismissPreview={dismissPreview}
             preparation={jobs.active?.kind === "prepare" ? jobs.active : undefined}
             onPrepare={() => goSettings()}
             initialModel={picker.model}
@@ -1025,6 +1005,13 @@ export default function App() {
             onPreview={(choice) => void previewVoice(choice)}
             onFavorite={toggleFavorite}
             onClone={openClone}
+            onDelete={(choice) => { closePicker(); void removeVoice(choice); }}
+            onAddReference={supplementVoice}
+            onRename={(choice) => {
+              closePicker();
+              setRenaming(choice);
+              setRename(choice.name);
+            }}
           />
         </Modal>
       )}
@@ -1036,14 +1023,15 @@ export default function App() {
           onCancel={() => void jobs.cancel()}
           onClose={() => setCloneOpen(false)}
           onSaved={(savedVoice) => {
-            setLibrary((previous) => [savedVoice, ...previous]);
-            updateDraft({ voiceKey: `clone:${savedVoice.id}`, speed: 1 });
+            setLibrary((previous) => [savedVoice, ...previous.filter((item) => item.id !== savedVoice.id)]);
+            if (!editingVoice) updateDraft({ voiceKey: `clone:${savedVoice.id}` });
             setCloneOpen(false);
-            setPage("workspace");
-            notify("声音已保存，可以直接用于当前文稿", "success");
+            if (!editingVoice) setPage("workspace");
+            notify(editingVoice ? "参考录音已保存，重新生成时会优先使用语言匹配的录音" : "声音已保存，可以直接用于当前文稿", "success");
           }}
           onSettings={() => goSettings("clone")}
           notify={notify}
+          existingVoice={editingVoice}
         />
       )}
       {exporting && (
@@ -1156,30 +1144,6 @@ export default function App() {
             </button>
           </footer>
         </Modal>
-      )}
-      {playback && (
-        <aside className="sample-player" aria-label="声音试听">
-          <div>
-            <span>
-              <Icon name="wave" size={15} />
-              正在试听 · {playback.name}
-            </span>
-            <button
-              className="icon-button"
-              aria-label="关闭试听播放器"
-              onClick={() => setPlayback(undefined)}
-            >
-              <Icon name="close" size={15} />
-            </button>
-          </div>
-          <AudioPlayer
-            key={playback.path}
-            path={playback.path}
-            duration={playback.duration}
-            compact
-            autoPlay
-          />
-        </aside>
       )}
       {toast && (
         <div

@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
-import type { ActiveJob, ModelId, VoiceChoice } from "../types";
+import { useEffect, useMemo, useState } from "react";
+import type { ActiveJob, ModelId, PreviewPlayback, VoiceChoice } from "../types";
 import { Icon } from "./Icon";
+import { ControlMenu } from "./ControlMenu";
+import { AudioPlayer } from "./AudioPlayer";
 
 export interface VoiceBrowserProps {
   voices: VoiceChoice[];
@@ -9,6 +11,8 @@ export interface VoiceBrowserProps {
   recent?: string[];
   busy: boolean;
   previewing?: string;
+  playback?: PreviewPlayback;
+  onDismissPreview: () => void;
   preparation?: ActiveJob;
   onPrepare: () => void;
   initialModel?: ModelId;
@@ -18,6 +22,7 @@ export interface VoiceBrowserProps {
   onClone: () => void;
   onDelete?: (voice: VoiceChoice) => void;
   onRename?: (voice: VoiceChoice) => void;
+  onAddReference?: (voice: VoiceChoice) => void;
 }
 export function VoiceBrowser({
   voices,
@@ -26,6 +31,8 @@ export function VoiceBrowser({
   recent = [],
   busy,
   previewing,
+  playback,
+  onDismissPreview,
   preparation,
   onPrepare,
   initialModel,
@@ -35,13 +42,13 @@ export function VoiceBrowser({
   onClone,
   onDelete,
   onRename,
+  onAddReference,
 }: VoiceBrowserProps) {
   const [tab, setTab] = useState<"all" | "mine" | "favorites" | "recent">(
     initialModel === "clone" ? "mine" : "all",
   );
   const [query, setQuery] = useState("");
-  const [language, setLanguage] = useState("all");
-  const [model, setModel] = useState(initialModel ?? "all");
+  const [language, setLanguage] = useState(initialModel === "en" ? "en" : "all");
   const filtered = useMemo(
     () =>
       voices
@@ -49,8 +56,7 @@ export function VoiceBrowser({
           if (tab === "mine" && v.kind !== "cloned") return false;
           if (tab === "favorites" && !favorites.includes(v.key)) return false;
           if (tab === "recent" && !recent.includes(v.key)) return false;
-          if (language !== "all" && v.language !== language) return false;
-          if (model !== "all" && v.model !== model) return false;
+          if (language !== "all" && v.language !== "auto" && v.language !== language) return false;
           return `${v.name} ${v.group} ${v.description} ${v.id}`
             .toLowerCase()
             .includes(query.trim().toLowerCase());
@@ -58,8 +64,11 @@ export function VoiceBrowser({
         .sort((a, b) =>
           tab === "recent" ? recent.indexOf(a.key) - recent.indexOf(b.key) : 0,
         ),
-    [voices, tab, favorites, recent, language, model, query],
+    [voices, tab, favorites, recent, language, query],
   );
+  useEffect(() => {
+    if (playback && !filtered.some((voice) => voice.key === playback.voiceKey)) onDismissPreview();
+  }, [playback, filtered, onDismissPreview]);
   return (
     <div className="voice-browser">
       <div className="browser-top">
@@ -90,7 +99,7 @@ export function VoiceBrowser({
         </div>
         <button className="button secondary" disabled={busy} onClick={onClone}>
           <Icon name="plus" size={16} />
-          克隆声音
+          创建我的声音
         </button>
       </div>
       {voices.some((voice) => !voice.previewAudio) && (
@@ -126,20 +135,9 @@ export function VoiceBrowser({
           <option value="zh">中文</option>
           <option value="en">英文</option>
         </select>
-        <select
-          aria-label="筛选生成方式"
-          value={model}
-          onChange={(e) => setModel(e.target.value as ModelId | "all")}
-        >
-          <option value="all">所有配音方式</option>
-          <option value="zh">中文配音</option>
-          <option value="en">英文配音</option>
-          <option value="clone">声音克隆</option>
-        </select>
       </div>
       <div className="browser-meta">
         <span>{filtered.length} 个声音</span>
-        <span>先听一听，再选择适合文稿的声音</span>
       </div>
       {filtered.length ? (
         <div className="voice-grid" role="tabpanel">
@@ -147,6 +145,7 @@ export function VoiceBrowser({
             const playable = !!voice.previewAudio;
             const preparing = !playable && (preparation?.voiceKey === voice.key || previewing === voice.key);
             const pending = !playable && !!preparation;
+            const playingHere = playback?.voiceKey === voice.key;
             return (
             <article
               className={`voice-tile${selected === voice.key ? " selected" : ""}`}
@@ -181,7 +180,7 @@ export function VoiceBrowser({
                   {playable ? "可播放" : preparing ? "准备中" : pending ? "等待准备" : voice.kind === "cloned" ? "待试听" : "待准备"}
                 </span>
                 <div className="inline-actions">
-                  <button
+                  {!playingHere && <button
                     className="icon-button"
                     title={playable ? "播放已准备好的声音示例" : voice.kind === "preset" ? "请先一键准备声音试听" : "试听声音示例"}
                     aria-label={`试听 ${voice.name}`}
@@ -193,7 +192,7 @@ export function VoiceBrowser({
                     ) : (
                       <Icon name="play" size={16} />
                     )}
-                  </button>
+                  </button>}
                   <button
                     className={`icon-button${favorites.includes(voice.key) ? " favorited" : ""}`}
                     aria-label={`${favorites.includes(voice.key) ? "取消收藏" : "收藏"} ${voice.name}`}
@@ -206,28 +205,22 @@ export function VoiceBrowser({
                       filled={favorites.includes(voice.key)}
                     />
                   </button>
-                  {voice.kind === "cloned" && onRename && (
-                    <button
-                      className="icon-button"
-                      aria-label={`重命名 ${voice.name}`}
-                      disabled={busy}
-                      onClick={() => onRename(voice)}
-                    >
-                      <Icon name="edit" size={15} />
-                    </button>
-                  )}
-                  {voice.kind === "cloned" && onDelete && (
-                    <button
-                      className="icon-button"
-                      aria-label={`删除声音 ${voice.name}`}
-                      disabled={busy}
-                      onClick={() => onDelete(voice)}
-                    >
-                      <Icon name="trash" size={16} />
-                    </button>
-                  )}
+                  {voice.kind === "cloned" && (onRename || onDelete || onAddReference) && <ControlMenu className="voice-menu" label={`管理声音 ${voice.name}`} trigger={<Icon name="more" size={17} />}>
+                    <div className="control-popover menu-actions">
+                      {onAddReference && <button disabled={busy} onClick={(e) => { e.currentTarget.closest("details")?.removeAttribute("open"); onAddReference(voice); }}><Icon name="plus" size={15} />补充参考录音</button>}
+                      {onRename && <button aria-label={`重命名 ${voice.name}`} disabled={busy} onClick={(e) => { e.currentTarget.closest("details")?.removeAttribute("open"); onRename(voice); }}><Icon name="edit" size={15} />重命名</button>}
+                      {onDelete && <button aria-label={`删除声音 ${voice.name}`} disabled={busy} onClick={(e) => { e.currentTarget.closest("details")?.removeAttribute("open"); onDelete(voice); }}><Icon name="trash" size={15} />删除声音</button>}
+                    </div>
+                  </ControlMenu>}
                 </div>
               </div>
+              {playingHere && (
+                <div className="voice-preview inline-preview" role="group" aria-label={`试听 ${voice.name}`}>
+                  <AudioPlayer key={playback.path + playback.startedAt} path={playback.path}
+                    duration={playback.duration} compact autoPlay onFinished={onDismissPreview} onInterrupted={onDismissPreview} />
+                  <button className="icon-button" aria-label={`结束试听 ${voice.name}`} onClick={onDismissPreview}><Icon name="close" size={15} /></button>
+                </div>
+              )}
             </article>
           );})}
         </div>

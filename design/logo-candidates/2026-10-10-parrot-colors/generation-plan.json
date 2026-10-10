@@ -1,5 +1,5 @@
 {
-  "product": "VoiceStudio / 配音工坊",
+  "product": "vovo",
   "brief": "本地配音与声音克隆。用户选择了鹦鹉，当前只比较配色，保留已有 B1/B2 造型。",
   "generation": {
     "provider": "OpenAI built-in image_gen",
@@ -27,7 +27,7 @@
       "rationale": "亲近自然，配音伙伴的轻松感",
       "direction": "圆嘴小鹦鹉",
       "corner": "lower-left",
-      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B1.png",
+      "sourcePath": "design/logo-candidates/2026-10-10/B1.png",
       "colors": {
         "body": "#4FBE91",
         "feature": "#1B5557",
@@ -47,7 +47,7 @@
       "rationale": "清晰、轻快的声音创作",
       "direction": "圆嘴小鹦鹉",
       "corner": "lower-right",
-      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B2.png",
+      "sourcePath": "design/logo-candidates/2026-10-10/B2.png",
       "colors": {
         "body": "#53C3C6",
         "feature": "#433369",
@@ -67,7 +67,7 @@
       "rationale": "保留小鹦鹉的活泼与辨识度",
       "direction": "圆嘴小鹦鹉",
       "corner": "lower-left",
-      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B1.png",
+      "sourcePath": "design/logo-candidates/2026-10-10/B1.png",
       "colors": {
         "body": "#F6D56A",
         "feature": "#683D78",
@@ -87,7 +87,7 @@
       "rationale": "温暖、友好的创作伙伴",
       "direction": "圆嘴小鹦鹉",
       "corner": "lower-right",
-      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B2.png",
+      "sourcePath": "design/logo-candidates/2026-10-10/B2.png",
       "colors": {
         "body": "#F09B85",
         "feature": "#66334A",
@@ -104,10 +104,10 @@
       "bgName": "gently muted mint green",
       "bodyName": "clear violet lavender",
       "featureName": "deep plum",
-      "rationale": "呼应 VoiceStudio 的紫色界面",
+      "rationale": "呼应 vovo 的紫色界面",
       "direction": "圆嘴小鹦鹉",
       "corner": "lower-left",
-      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B1.png",
+      "sourcePath": "design/logo-candidates/2026-10-10/B1.png",
       "colors": {
         "body": "#A38AE2",
         "feature": "#432866",
@@ -127,7 +127,7 @@
       "rationale": "柔和、安心的本地声音工具",
       "direction": "圆嘴小鹦鹉",
       "corner": "lower-right",
-      "sourcePath": "/Users/yangbukun/Desktop/code/voice-studio/design/logo-candidates/2026-10-10/B2.png",
+      "sourcePath": "design/logo-candidates/2026-10-10/B2.png",
       "colors": {
         "body": "#F6DFAA",
         "feature": "#49346D",

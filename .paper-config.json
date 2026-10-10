@@ -1,0 +1,16 @@
+{
+  "editor": "default",
+  "deploy": "auto",
+  "color": "#7654C4",
+  "icon": "assets/vovo-logo.png",
+  "compress": false,
+  "language": "zh_CN",
+  "postsDir": "./posts",
+  "siteDir": ".",
+  "gitRemote": "https://github.com/ohmyangboy/vovo.git",
+  "siteName": "vovo",
+  "siteUrl": "https://ohmyangboy.github.io/vovo/",
+  "ogImage": "",
+  "imageRadius": 16,
+  "schemaVersion": 2
+}

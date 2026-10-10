@@ -9,10 +9,11 @@ from pathlib import Path
 import sys
 import time
 import wave
+from app_paths import app_home
 
 REPO = "mlx-community/Qwen3-ASR-0.6B-4bit"
 REVISION = "313d850181767edf09f00a9c289becca70e58cd0"
-ROOT = Path(os.environ.get("VOICE_STUDIO_HOME", Path.home() / "Library/Application Support/VoiceStudio"))
+ROOT = app_home()
 MODEL = ROOT / "models/qwen3-asr-0.6b-4bit"
 FILES = {
     "chat_template.json", "config.json", "generation_config.json", "merges.txt",

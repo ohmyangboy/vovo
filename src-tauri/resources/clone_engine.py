@@ -14,12 +14,14 @@ import tempfile
 import time
 
 from artifacts import safe_name, write_artifacts
-from text_processing import fmt_ts, prepare_items
+from app_paths import app_home
+from text_processing import fmt_ts
+from clone_speech import change_tempo, language_for, pick_reference, speech_items, validate_speed
 import transcription
 
 REPO = "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"
 REVISION = "1eccf1cb2519b5a4e8a95b5f0544f3303568164f"
-ROOT = Path(os.environ.get("VOICE_STUDIO_HOME", Path.home() / "Library/Application Support/VoiceStudio"))
+ROOT = app_home()
 MODEL = ROOT / "models/qwen3-base-0.6b"
 
 def emit(kind, **data):
@@ -134,6 +136,15 @@ def validate(req):
     outdir = Path(req.get("outdir", ""))
     if not outdir.is_absolute() or not outdir.is_dir():
         raise ValueError("请选择存在的导出文件夹")
+    validate_speed(req.get("speed", 1))
+    additional = req.get("references", [])
+    if not isinstance(additional, list) or len(additional) > 2:
+        raise ValueError("一个声音最多保留 3 段参考录音")
+    for ref in additional:
+        if not isinstance(ref, dict):
+            raise ValueError("参考录音无效")
+        validate(dict(text=text, refText=ref.get("refText", ""), reference=ref.get("reference", ""),
+                      start=0, duration=ref.get("duration", 0), outdir=str(outdir)))
     return text, ref_text, reference, start, duration, outdir
 
 def timestamp(seconds):
@@ -153,12 +164,15 @@ def generate(req, ffmpeg):
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
     import numpy as np
     import soundfile as sf
-    with tempfile.TemporaryDirectory(prefix="voice-studio-clone-") as work:
-        wav = Path(work) / "reference.wav"
-        subprocess.run([ffmpeg, "-nostdin", "-v", "error", "-protocol_whitelist", "file,pipe", "-threads", "1", "-ss", str(start), "-i", str(reference), "-t", str(duration), "-ac", "1", "-ar", "24000", str(wav)], check=True, timeout=60)
-        samples, sr = sf.read(wav)
-        if len(samples) < sr * 3 or not np.isfinite(samples).all() or np.max(np.abs(samples)) < 0.001:
-            raise ValueError("所选参考片段不足 3 秒、为空或静音，请调整起点")
+    with tempfile.TemporaryDirectory(prefix="vovo-clone-") as work:
+        references = []
+        for index, ref in enumerate([dict(reference=str(reference), refText=ref_text, start=start, duration=duration)] + req.get("references", [])):
+            wav = Path(work) / f"reference-{index}.wav"
+            subprocess.run([ffmpeg, "-nostdin", "-v", "error", "-protocol_whitelist", "file,pipe", "-threads", "1", "-ss", str(ref.get("start", 0)), "-i", ref["reference"], "-t", str(ref["duration"]), "-ac", "1", "-ar", "24000", str(wav)], check=True, timeout=60)
+            samples, sr = sf.read(wav)
+            if len(samples) < sr * 3 or not np.isfinite(samples).all() or np.max(np.abs(samples)) < 0.001:
+                raise ValueError("所选参考片段不足 3 秒、为空或静音，请调整起点")
+            references.append(dict(reference=str(wav), refText=ref["refText"]))
         emit("progress", stage="load", done=0, total=0, label="正在载入克隆声音…")
         import mlx.core as mx
         from mlx_audio.tts.utils import load_model
@@ -167,7 +181,7 @@ def generate(req, ffmpeg):
         model = load_model(str(MODEL))
         if model.config.tts_model_type != "base" or not model.speech_tokenizer.has_encoder:
             raise ValueError("模型不是可用的 Base 参考音频克隆模型，已停止")
-        items = prepare_items(text.split("\n\n"), max_len=90)
+        items = speech_items(text)
         if not any(sentence for sentence, _ in items):
             raise ValueError("文稿没有可朗读的内容")
         audio, captions, offset = [], [], 0.0
@@ -180,7 +194,8 @@ def generate(req, ffmpeg):
                 offset += len(padding) / sample_rate
                 continue
             chunks = []
-            for result in model.generate(text=sentence, ref_audio=str(wav), ref_text=ref_text, lang_code="chinese", max_tokens=600, verbose=False):
+            ref = pick_reference(sentence, references)
+            for result in model.generate(text=sentence, ref_audio=ref["reference"], ref_text=ref["refText"], lang_code=language_for(sentence), max_tokens=600, verbose=False):
                 if result.sample_rate != sample_rate:
                     raise ValueError("模型返回了不一致的采样率")
                 chunks.append(np.asarray(result.audio, dtype=np.float32).reshape(-1))
@@ -197,7 +212,8 @@ def generate(req, ffmpeg):
             mx.clear_cache()
         emit("progress", stage="encode", done=0, total=0, label="整理音频与字幕…")
         name = safe_name(str(req.get("name") or ("克隆配音-" + time.strftime("%Y%m%d-%H%M%S") + "-" + str(os.getpid()))))
-        result = write_artifacts(Path(work), "result", np.concatenate(audio), sample_rate, captions, text, ffmpeg)
+        rendered, captions = change_tempo(np.concatenate(audio), sample_rate, captions, req.get("speed", 1), work, ffmpeg)
+        result = write_artifacts(Path(work), "result", rendered, sample_rate, captions, text, ffmpeg)
         for key, ext in [("wav", "wav"), ("mp3", "mp3"), ("srt", "srt"), ("txt", "txt"), ("captions", "captions.json")]:
             target = outdir / f"{name}.{ext}"
             if target.exists():

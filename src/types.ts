@@ -64,7 +64,15 @@ export interface EngineEvent {
   previewDuration?: number;
 }
 
-export type Page = "workspace" | "voices" | "history" | "settings";
+export type Page = "workspace" | "history" | "settings";
+export interface PreviewPlayback {
+  path: string;
+  name: string;
+  duration?: number;
+  startedAt: number;
+  origin: "workspace" | "voice";
+  voiceKey: string;
+}
 export type ModelId = "zh" | "en" | "clone";
 export type ExportFormat = "mp3" | "wav" | "srt" | "txt";
 export interface Draft {
@@ -92,6 +100,7 @@ export interface SavedVoice {
   createdAt: number;
   authorizedAt: number;
   previewAudio: string | null;
+  references?: { reference: string; refText: string; duration: number }[];
 }
 export interface VoiceChoice {
   key: string;
@@ -99,7 +108,7 @@ export interface VoiceChoice {
   model: ModelId;
   name: string;
   kind: "preset" | "cloned";
-  language: "zh" | "en";
+  language: "zh" | "en" | "auto";
   group: string;
   description: string;
   ready: boolean;

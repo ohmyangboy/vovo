@@ -1,5 +1,10 @@
 import type { Page } from "@playwright/test";
 
+export async function openVoicePicker(page: Page) {
+  await page.getByRole("button", { name: "生成工作台", exact: true }).click();
+  await page.locator(".compose-voice").click();
+}
+
 // 只模拟 IPC 与媒体文件，验证界面流程；不冒充真实语音推理。
 export async function desktopFixture(page: Page) {
   await page.addInitScript(() => {
@@ -17,6 +22,8 @@ export async function desktopFixture(page: Page) {
       transcriptionText: "这是参考录音里面实际说的话。",
       preparedKeys: ["zh:zf_001", "en:af_heart"],
       includePendingVoices: false,
+      savedVoices: voices,
+      records: history,
       completePrepare: null as (() => void) | null,
       calls: [] as { command: string; args: any }[],
       pending: null as ((error: string) => void) | null,
@@ -196,16 +203,23 @@ export async function desktopFixture(page: Page) {
               id: "saved-voice-1",
               name: args.req.name,
               model: "clone",
-              language: "zh",
+              language: "auto",
               reference: "/managed/voice/reference.wav",
               refText: args.req.refText,
               duration: 10,
               createdAt: Date.now(),
               authorizedAt: Date.now(),
               previewAudio: args.req.previewId ? "/managed/voice/preview.mp3" : null,
+              references: [],
             };
             voices.push(voice);
             return voice;
+          }
+          case "add_voice_reference": {
+            const voice = voices.find((item) => item.id === args.id);
+            if (!voice || !args.authorized) throw "声音或授权无效";
+            voice.references.push({ reference: "/managed/voice/english.wav", refText: args.refText, duration: 20 });
+            return { ...voice };
           }
           case "generate_workspace": {
             emit({

@@ -1,5 +1,23 @@
 import type { Draft, Preferences } from "./types";
 
+export const draftStorageKey = "vovo.draft.v1";
+export const preferencesStorageKey = "vovo.preferences.v1";
+
+// 同一份文稿和偏好只迁移一次，已有 vovo 数据优先。
+function readStoredValue(key: string, legacyKey: string): string | null {
+  const current = localStorage.getItem(key);
+  if (current !== null) return current;
+  const legacy = localStorage.getItem(legacyKey);
+  if (legacy !== null) {
+    try {
+      localStorage.setItem(key, legacy);
+    } catch {
+      // 存储已满时仍能读取原来的文稿，后续自动保存会提示失败。
+    }
+  }
+  return legacy;
+}
+
 export const defaultDraft: Draft = {
   title: "",
   text: "",
@@ -18,7 +36,7 @@ export const defaultPreferences: Preferences = {
 export function readDraft(): Draft {
   try {
     const value = JSON.parse(
-      localStorage.getItem("voicestudio.draft.v1") ?? "null",
+      readStoredValue(draftStorageKey, "voicestudio.draft.v1") ?? "null",
     );
     if (!value || typeof value.text !== "string") return { ...defaultDraft };
     return {
@@ -42,7 +60,7 @@ export function readDraft(): Draft {
 export function readPreferences(): Preferences {
   try {
     const value = JSON.parse(
-      localStorage.getItem("voicestudio.preferences.v1") ?? "null",
+      readStoredValue(preferencesStorageKey, "voicestudio.preferences.v1") ?? "null",
     );
     if (!value) return { ...defaultPreferences };
     const formats = Array.isArray(value.formats)

@@ -54,6 +54,8 @@ export const api = {
     previewId?: string;
     authorized: boolean;
   }) => call<SavedVoice>("save_voice", { req }),
+  addVoiceReference: (id: string, referenceId: string, refText: string, authorized: boolean) =>
+    call<SavedVoice>("add_voice_reference", { id, referenceId, refText, authorized }),
   deleteVoice: (id: string) => call<void>("delete_voice", { id }),
   renameVoice: (id: string, name: string) =>
     call<SavedVoice>("rename_voice", { id, name }),

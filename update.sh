@@ -3,7 +3,7 @@
 set -euo pipefail
 
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-install_dir="/Applications/VoiceStudio.app"
+install_dir="/Applications/vovo.app"
 should_open=true
 has_install_path=false
 
@@ -11,14 +11,14 @@ usage() {
   cat <<'USAGE'
 用法：./update.sh [--no-open] [安装路径]
 
-默认构建、更新并打开 /Applications/VoiceStudio.app。
+默认构建、更新并打开 /Applications/vovo.app。
   --no-open   更新后不自动打开
   -h, --help  显示说明
 
 示例：
   ./update.sh
   ./update.sh --no-open
-  ./update.sh "$HOME/Applications/VoiceStudio.app"
+  ./update.sh "$HOME/Applications/vovo.app"
 USAGE
 }
 
@@ -44,7 +44,7 @@ done
 if [[ -e "$install_dir" ]]; then
   [[ -f "$install_dir/Contents/Info.plist" ]] || fail "目标已存在且不是应用包：$install_dir"
   installed_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$install_dir/Contents/Info.plist" 2>/dev/null || true)"
-  [[ "$installed_id" == local.voicestudio ]] || fail "目标不是 VoiceStudio，已保留：$install_dir"
+  [[ "$installed_id" == local.vovo || "$installed_id" == local.voicestudio ]] || fail "目标不是 vovo，已保留：$install_dir"
 fi
 
 # Finder 双击时也能找到 Homebrew、Rust 与 nvm 管理的 Node；只调整当前进程。
@@ -75,6 +75,12 @@ install_parent="$(dirname "$install_dir")"
 mkdir -p "$install_parent"
 install_parent="$(cd "$install_parent" && pwd -P)"
 install_dir="$install_parent/$(basename "$install_dir")"
+legacy_dir=""
+legacy_candidate="$install_parent/VoiceStudio.app"
+if [[ "$legacy_candidate" != "$install_dir" && ! -L "$legacy_candidate" && -f "$legacy_candidate/Contents/Info.plist" ]]; then
+  legacy_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$legacy_candidate/Contents/Info.plist" 2>/dev/null || true)"
+  if [[ "$legacy_id" == local.voicestudio ]]; then legacy_dir="$legacy_candidate"; fi
+fi
 lock_dir="$install_parent/.$(basename "$install_dir").update-lock"
 mkdir "$lock_dir" 2>/dev/null || fail "已有更新任务，或安装目录不可写：$install_parent。若上次更新被强制中断，请删除 $lock_dir 后重试。"
 
@@ -98,6 +104,14 @@ cleanup() {
         printf '原应用保留在：%s/previous.app\n' "$stage_dir" >&2
       fi
     fi
+    if [[ -n "$stage_dir" && -d "$stage_dir/legacy.app" ]]; then
+      if mv "$stage_dir/legacy.app" "$legacy_dir"; then
+        printf '已恢复旧版应用：%s\n' "$legacy_dir" >&2
+      else
+        preserve_stage=true
+        printf '旧版应用保留在：%s/legacy.app\n' "$stage_dir" >&2
+      fi
+    fi
   fi
   if [[ -n "$stage_dir" && "$preserve_stage" == false ]]; then
     rm -rf "$stage_dir"
@@ -117,7 +131,7 @@ if [[ ! -x node_modules/.bin/tauri || ! -f node_modules/.package-lock.json ||
   npm ci --no-audit --no-fund
 fi
 
-printf '\n正在构建 VoiceStudio…\n'
+printf '\n正在构建 vovo…\n'
 ./node_modules/.bin/tauri build --ci --no-sign --bundles app -- --locked
 target_dir="$(cargo metadata --manifest-path "$project_dir/src-tauri/Cargo.toml" --no-deps --locked --format-version 1 | node -e '
   let input = "";
@@ -127,29 +141,34 @@ target_dir="$(cargo metadata --manifest-path "$project_dir/src-tauri/Cargo.toml"
 if [[ -n "${CARGO_BUILD_TARGET:-}" ]]; then
   target_dir="$target_dir/$CARGO_BUILD_TARGET"
 fi
-app_dir="$target_dir/release/bundle/macos/VoiceStudio.app"
+app_dir="$target_dir/release/bundle/macos/vovo.app"
 [[ -f "$app_dir/Contents/Info.plist" ]] || fail "没有找到构建产物：$app_dir"
 built_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app_dir/Contents/Info.plist")"
-[[ "$built_id" == local.voicestudio ]] || fail "构建产物的应用标识不正确。"
+[[ "$built_id" == local.vovo ]] || fail "构建产物的应用标识不正确。"
 
 printf '\n正在签名并检查应用…\n'
 codesign --force --deep --sign - "$app_dir"
 codesign --verify --deep --strict "$app_dir"
 
 # 先在安装目录所在磁盘完整复制并验签，再退出旧版、切换目录。
-stage_dir="$(mktemp -d "$install_parent/.voicestudio-update.XXXXXX")"
+stage_dir="$(mktemp -d "$install_parent/.vovo-update.XXXXXX")"
 ditto "$app_dir" "$stage_dir/new.app"
 codesign --verify --deep --strict "$stage_dir/new.app"
-app_running() { pgrep -f '/Contents/MacOS/voice-studio-app([[:space:]]|$)' >/dev/null 2>&1; }
+app_running() { pgrep -f '/Contents/MacOS/(vovo|voice-studio-app)([[:space:]]|$)' >/dev/null 2>&1; }
 if app_running; then
-  printf '\n正在退出旧版 VoiceStudio…\n'
-  osascript -e 'tell application id "local.voicestudio" to quit' >/dev/null 2>&1 || true
+  printf '\n正在退出旧版 vovo…\n'
+  if pgrep -f '/Contents/MacOS/voice-studio-app([[:space:]]|$)' >/dev/null 2>&1; then
+    osascript -e 'tell application id "local.voicestudio" to quit' >/dev/null 2>&1 || true
+  fi
+  if pgrep -f '/Contents/MacOS/vovo([[:space:]]|$)' >/dev/null 2>&1; then
+    osascript -e 'tell application id "local.vovo" to quit' >/dev/null 2>&1 || true
+  fi
   for ((attempt = 0; attempt < 50; attempt++)); do
     app_running || break
     sleep 0.2
   done
   if app_running; then
-    fail "应用尚未退出。请结束当前任务并退出 VoiceStudio 后重试；原应用未替换。"
+    fail "应用尚未退出。请结束当前任务并退出 vovo 后重试；原应用未替换。"
   fi
 fi
 
@@ -160,6 +179,9 @@ new_installed=true
 mv "$stage_dir/new.app" "$install_dir"
 codesign --verify --deep --strict "$install_dir"
 touch "$install_dir"
+if [[ -n "$legacy_dir" ]]; then
+  mv "$legacy_dir" "$stage_dir/legacy.app"
+fi
 install_complete=true
 
 if [[ "$should_open" == true ]]; then

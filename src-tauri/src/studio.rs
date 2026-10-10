@@ -197,6 +197,15 @@ pub struct SavedVoice {
     pub created_at: u64,
     pub authorized_at: u64,
     pub preview_audio: Option<String>,
+    #[serde(default)]
+    pub references: Vec<VoiceSample>,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VoiceSample {
+    pub reference: String,
+    pub ref_text: String,
+    pub duration: f64,
 }
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -271,6 +280,18 @@ fn load_voice(id: &str) -> Result<SavedVoice, String> {
         return Err("声音资料无效或版本不兼容".into());
     }
     managed_file(&voice.reference, &path)?;
+    if voice.references.len() > 2 {
+        return Err("一个声音最多保留 3 段参考录音".into());
+    }
+    for sample in &voice.references {
+        if !(3.0..=20.01).contains(&sample.duration)
+            || sample.ref_text.trim().is_empty()
+            || sample.ref_text.chars().count() > 1000
+        {
+            return Err("参考录音资料无效".into());
+        }
+        managed_file(&sample.reference, &path)?;
+    }
     if voice
         .preview_audio
         .as_ref()
@@ -515,7 +536,11 @@ pub fn save_voice(req: SaveVoiceRequest) -> Result<SavedVoice, String> {
     let reference: Reference =
         serde_json::from_slice(&fs::read(source.join("reference.json")).map_err(io_error)?)
             .map_err(io_error)?;
+    if reference.id != req.reference_id || reference.authorized_at == 0 {
+        return Err("请确认声音使用授权".into());
+    }
     let wav = managed_file(&reference.path, &source)?;
+    waveform(&wav)?;
     let id = unique_id();
     let root = voice_path(&id)?;
     let temporary = Temporary::create(folder("voices").join(format!(".tmp-{id}")))?;
@@ -534,16 +559,65 @@ pub fn save_voice(req: SaveVoiceRequest) -> Result<SavedVoice, String> {
         id,
         name: name.into(),
         model: "clone".into(),
-        language: "zh".into(),
+        language: "auto".into(),
         reference: root.join("reference.wav").to_string_lossy().into_owned(),
         ref_text: ref_text.into(),
         duration: reference.duration,
         created_at: now(),
         authorized_at: now(),
         preview_audio,
+        references: vec![],
     };
     write_json(&temporary.0.join("voice.json"), &voice)?;
     fs::rename(&temporary.0, &root).map_err(io_error)?;
+    let _ = fs::remove_dir_all(source);
+    Ok(voice)
+}
+
+#[tauri::command]
+pub fn add_voice_reference(
+    id: String,
+    reference_id: String,
+    ref_text: String,
+    authorized: bool,
+) -> Result<SavedVoice, String> {
+    let _job = jobs::Job::acquire()?;
+    let mut voice = load_voice(&id)?;
+    if !authorized {
+        return Err("请确认声音使用授权".into());
+    }
+    if voice.references.len() >= 2 {
+        return Err("已保留 3 段录音，请先使用这些录音试听效果".into());
+    }
+    let text = ref_text.trim();
+    if text.is_empty() || text.chars().count() > 1000 {
+        return Err("请填写准确的参考文字（最多 1000 字）".into());
+    }
+    let source = reference_path(&reference_id)?;
+    let reference: Reference =
+        serde_json::from_slice(&fs::read(source.join("reference.json")).map_err(io_error)?)
+            .map_err(io_error)?;
+    if reference.id != reference_id || reference.authorized_at == 0 {
+        return Err("请确认声音使用授权".into());
+    }
+    let wav = managed_file(&reference.path, &source)?;
+    let (duration, _, _) = waveform(&wav)?;
+    let root = voice_path(&id)?;
+    let target = root.join(format!("reference-{}.wav", unique_id()));
+    if let Err(error) = fs::copy(wav, &target) {
+        let _ = fs::remove_file(&target);
+        return Err(io_error(error));
+    }
+    voice.references.push(VoiceSample {
+        reference: target.to_string_lossy().into_owned(),
+        ref_text: text.into(),
+        duration,
+    });
+    voice.language = "auto".into();
+    if let Err(error) = write_json(&root.join("voice.json"), &voice) {
+        let _ = fs::remove_file(target);
+        return Err(error);
+    }
     let _ = fs::remove_dir_all(source);
     Ok(voice)
 }
@@ -579,11 +653,8 @@ pub async fn generate_workspace(
     if text.is_empty() || text.chars().count() > max {
         return Err(format!("文稿须为 1–{max} 字"));
     }
-    if !req.speed.is_finite()
-        || (req.model == "clone" && req.speed != 1.0)
-        || (req.model != "clone" && !(0.8..=1.3).contains(&req.speed))
-    {
-        return Err("当前模型不支持所选语速".into());
+    if !req.speed.is_finite() || !(0.8..=1.3).contains(&req.speed) {
+        return Err("语速须为 0.8–1.3 倍".into());
     }
     let category = if req.preview { "previews" } else { "artifacts" };
     let temporary = Temporary::create(folder(category).join(format!(".tmp-{job_id}")))?;
@@ -591,7 +662,7 @@ pub async fn generate_workspace(
         if !cfg!(all(target_os = "macos", target_arch = "aarch64")) {
             return Err("本地克隆目前需要 Apple Silicon Mac".into());
         }
-        let (reference, ref_text, duration) = if let Some(trial) = &req.reference {
+        let (reference, ref_text, duration, references) = if let Some(trial) = &req.reference {
             let root = reference_path(&trial.id)?;
             let reference: Reference =
                 serde_json::from_slice(&fs::read(root.join("reference.json")).map_err(io_error)?)
@@ -602,12 +673,18 @@ pub async fn generate_workspace(
                     .into_owned(),
                 trial.ref_text.clone(),
                 reference.duration,
+                vec![],
             )
         } else {
             let voice = load_voice(&req.voice)?;
-            (voice.reference, voice.ref_text, voice.duration)
+            (
+                voice.reference,
+                voice.ref_text,
+                voice.duration,
+                voice.references,
+            )
         };
-        clone::run_request(&app, serde_json::json!({"reference":reference,"refText":ref_text,"text":text,"start":0,"duration":duration.min(20.0),"outdir":temporary.0,"name":"audio"})).await?
+        clone::run_request(&app, serde_json::json!({"reference":reference,"refText":ref_text,"references":references,"text":text,"speed":req.speed,"start":0,"duration":duration.min(20.0),"outdir":temporary.0,"name":"audio"})).await?
     } else {
         if !["en", "zh"].contains(&req.model.as_str()) || req.reference.is_some() {
             return Err("请选择支持的配音模型".into());
@@ -754,6 +831,7 @@ pub async fn prepare_saved_samples(app: &AppHandle) -> Result<(), String> {
             serde_json::json!({
                 "text": "你好，这是我的声音。今天有个故事，想讲给你听。",
                 "reference": voice.reference, "refText": voice.ref_text,
+                "references": voice.references,
                 "start": 0, "duration": voice.duration, "outdir": temporary.0, "name": "试听",
             }),
         )
@@ -909,7 +987,7 @@ fn export_files(bundle: &Bundle, destination: &Path, formats: &[String]) -> Resu
     }
     let suffix = unique_id();
     let name = format!("{}-{suffix}", name_for_file(&bundle.title));
-    let temporary = Temporary::create(destination.join(format!(".voicestudio-{suffix}")))?;
+    let temporary = Temporary::create(destination.join(format!(".vovo-{suffix}")))?;
     for format in formats {
         let output = temporary
             .0
@@ -939,6 +1017,25 @@ pub fn delete_record(id: String) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn legacy_voice_loads_without_extra_samples_and_samples_serialize_for_python() {
+        let mut voice: super::SavedVoice = serde_json::from_value(serde_json::json!({
+            "id": "old-voice", "name": "My voice", "model": "clone", "language": "zh",
+            "reference": "/managed/reference.wav", "refText": "Original recording",
+            "duration": 10.0, "createdAt": 1, "authorizedAt": 1, "previewAudio": null,
+        }))
+        .unwrap();
+        assert_eq!(voice.schema_version, 1);
+        assert!(voice.references.is_empty());
+        voice.references.push(super::VoiceSample {
+            reference: "/managed/english.wav".into(),
+            ref_text: "English recording".into(),
+            duration: 12.0,
+        });
+        let json = serde_json::to_value(&voice).unwrap();
+        assert_eq!(json["references"][0]["refText"], "English recording");
+        assert_eq!(json["references"][0]["duration"], 12.0);
+    }
     use super::*;
     #[test]
     fn paths_reject_traversal() {

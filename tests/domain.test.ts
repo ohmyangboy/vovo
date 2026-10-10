@@ -29,19 +29,39 @@ beforeEach(() => {
 
 test("没有草稿和损坏数据时使用安全默认值", () => {
   assert.deepEqual(readDraft(), defaultDraft);
-  localStorage.setItem("voicestudio.draft.v1", "{broken");
+  localStorage.setItem("vovo.draft.v1", "{broken");
   assert.deepEqual(readDraft(), defaultDraft);
   localStorage.setItem(
-    "voicestudio.draft.v1",
+    "vovo.draft.v1",
     JSON.stringify({ text: "中文", speed: 999, title: 12 }),
   );
   assert.equal(readDraft().speed, 1);
   assert.equal(readDraft().title, "");
   assert.equal(readDraft().text, "中文");
 });
+test("旧版文稿、偏好与收藏自动复用，已有 vovo 数据优先", () => {
+  const oldDraft = JSON.stringify({ text: "原来的文稿", title: "原题", voiceKey: "clone:mine", speed: 1.1 });
+  const oldPreferences = JSON.stringify({ theme: "dark", outputDir: "/Users/me/Downloads/VoiceStudio", formats: ["wav"], favorites: ["clone:mine"] });
+  localStorage.setItem("voicestudio.draft.v1", oldDraft);
+  localStorage.setItem("voicestudio.preferences.v1", oldPreferences);
+  assert.equal(readDraft().text, "原来的文稿");
+  assert.equal(readDraft().voiceKey, "clone:mine");
+  assert.equal(readPreferences().outputDir, "/Users/me/Downloads/VoiceStudio");
+  assert.deepEqual(readPreferences().favorites, ["clone:mine"]);
+  assert.equal(localStorage.getItem("vovo.draft.v1"), oldDraft);
+  assert.equal(localStorage.getItem("vovo.preferences.v1"), oldPreferences);
+  localStorage.setItem("vovo.draft.v1", JSON.stringify({ text: "新文稿" }));
+  assert.equal(readDraft().text, "新文稿");
+  assert.equal(localStorage.getItem("voicestudio.draft.v1"), oldDraft);
+});
+test("迁移时存储写入失败，仍可读取旧文稿", () => {
+  localStorage.setItem("voicestudio.draft.v1", JSON.stringify({ text: "保留文稿" }));
+  localStorage.setItem = () => { throw new Error("full"); };
+  assert.equal(readDraft().text, "保留文稿");
+});
 test("导出偏好过滤非法格式并至少保留一个默认格式", () => {
   localStorage.setItem(
-    "voicestudio.preferences.v1",
+    "vovo.preferences.v1",
     JSON.stringify({
       theme: "unknown",
       formats: ["exe"],

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""配音工坊本地引擎。
+"""vovo本地引擎。
 
 所有与 TTS 模型的交互都通过这个脚本完成，App 仅负责界面。
 
@@ -27,15 +27,13 @@ import sys
 from pathlib import Path
 
 from artifacts import write_artifacts, write_mp3
+from app_paths import app_home
 from text_processing import clean_marks, fmt_ts, prepare_items, split_sentences, write_srt
 
 SR = 24000
 HF_HOME = Path(os.environ.get("HF_HOME", Path.home() / ".cache" / "huggingface"))
 HF_HUB = HF_HOME / "hub"
-DEFAULT_HOME = (Path.home() / "Library/Application Support/VoiceStudio" if sys.platform == "darwin" else
-                Path(os.environ.get("APPDATA", Path.home() / "AppData/Roaming")) / "VoiceStudio" if sys.platform == "win32" else
-                Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "VoiceStudio")
-APP_HOME = Path(os.environ.get("VOICE_STUDIO_HOME", DEFAULT_HOME))
+APP_HOME = app_home()
 MODEL_ROOT = APP_HOME / "models" / "kokoro"
 SAMPLE_ROOT = APP_HOME / "samples"
 SAMPLE_VERSION = 1

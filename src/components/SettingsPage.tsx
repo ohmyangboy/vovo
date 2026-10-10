@@ -139,8 +139,8 @@ export function SettingsPage({
         <details className="settings-details">
           <summary>资源位置与维护</summary>
           <div>
-            <p>配音资源和声音试听保存在 VoiceStudio 的应用数据目录，由应用统一管理。重新准备会复用已有文件。</p>
-            <p>macOS：~/Library/Application Support/VoiceStudio/</p>
+            <p>配音资源和声音试听保存在 vovo 的应用数据目录，由应用统一管理。重新准备会复用已有文件。</p>
+            <p>macOS：~/Library/Application Support/vovo/</p>
             <p>models 保存配音资源，samples 保存声音库试听。清理文稿试听缓存不会删除这些已准备好的声音。</p>
             <div className="resource-maintenance">
               {(["zh", "en"] as const).map((id) => {

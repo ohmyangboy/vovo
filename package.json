@@ -1,7 +1,15 @@
 {
-  "name": "voice-studio-app",
+  "name": "vovo",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ohmyangboy/vovo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ohmyangboy/vovo/issues"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +18,7 @@
     "tauri": "tauri",
     "update:local": "bash ./update.sh",
     "test": "npm run test:unit && npm run test:e2e",
-    "test:unit": "node --experimental-strip-types --test tests/domain.test.ts",
+    "test:unit": "node --experimental-strip-types --test tests/domain.test.ts tests/update.test.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {

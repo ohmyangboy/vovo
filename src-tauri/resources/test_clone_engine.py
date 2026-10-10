@@ -32,6 +32,13 @@ class ValidationTests(unittest.TestCase):
     def test_subtitle_rollover(self):
         self.assertEqual(engine.timestamp(59.9999), "00:01:00,000")
 
+    def test_bad_speed_or_extra_reference_fails_before_model_load(self):
+        for update in [dict(speed=1.5), dict(speed=float('nan')), dict(references=[{}]),
+                       dict(references=[dict(reference=self.req['reference'], refText='English', duration=30)]),
+                       dict(references=[self.req] * 3)]:
+            with self.subTest(update=update), self.assertRaises(ValueError):
+                engine.validate(self.req | update)
+
 
 class DownloadTests(unittest.TestCase):
     def test_progress_does_not_regress_and_completed_model_is_reused_offline(self):

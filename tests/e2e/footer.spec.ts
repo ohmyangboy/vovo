@@ -1,0 +1,84 @@
+import { expect, test } from "@playwright/test";
+import { desktopFixture, openVoicePicker, setMode } from "./desktop.fixture";
+
+test.beforeEach(async ({ page }) => { await desktopFixture(page); await page.goto("/"); });
+
+test("长文稿只在编辑区滚动，生成、播放和导出始终留在同一个底栏", async ({ page }) => {
+  const editor = page.getByRole("textbox", { name: "配音文稿" });
+  await page.getByRole("textbox", { name: "文稿标题" }).fill("一个页面完成配音");
+  await editor.fill("This is a complete sentence for the narration.\n\n".repeat(80));
+  await editor.evaluate((element: HTMLTextAreaElement) => { element.scrollTop = element.scrollHeight; });
+  expect(await editor.evaluate((element: HTMLTextAreaElement) => element.scrollTop)).toBeGreaterThan(0);
+  await page.getByRole("button", { name: "生成配音", exact: true }).click();
+  const footer = page.getByRole("region", { name: "生成结果", exact: true });
+  await expect(footer).toBeInViewport();
+  await expect(page.locator("main footer")).toHaveCount(1);
+  await expect(page.locator(".result-panel,.workspace-footnote,.generate-toolbar")).toHaveCount(0);
+  await expect(footer.getByRole("button", { name: "导出文件", exact: true })).toBeInViewport();
+  await footer.getByRole("button", { name: "播放音频", exact: true }).click();
+  await footer.locator("audio").evaluate((audio: HTMLAudioElement) => { audio.pause(); audio.currentTime = 1.5; audio.dispatchEvent(new Event("timeupdate")); });
+  await expect(footer.getByRole("slider", { name: "音频播放位置" })).toHaveValue("1.5");
+  await footer.getByRole("button", { name: "导出文件", exact: true }).click();
+  await expect(page.locator(".toast")).toContainText("文件已导出");
+  expect(await page.locator("main").evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(true);
+  const box = await footer.boundingBox();
+  expect(Math.abs(box!.y + box!.height - page.viewportSize()!.height)).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: "/tmp/vovo-shared-footer.png" });
+});
+
+test("小窗口预览、完成、旧版本和生成中均保持底栏可用，字幕校对不增加第二个播放器", async ({ page }) => {
+  await page.setViewportSize({ width: 720, height: 620 });
+  await page.getByRole("textbox", { name: "文稿标题" }).fill("小窗口配音");
+  const editor = page.getByRole("textbox", { name: "配音文稿" });
+  await editor.fill("这是一段需要配音并核对字幕的文稿。".repeat(100));
+  await page.getByRole("button", { name: "生成配音", exact: true }).click();
+  const footer = page.getByRole("region", { name: "生成结果", exact: true });
+  for (const label of ["生成配音", "导出文件", "字幕"]) await expect(footer.getByRole("button", { name: label, exact: true })).toBeInViewport();
+  await footer.getByRole("button", { name: "字幕", exact: true }).click();
+  const captions = page.getByRole("dialog", { name: "字幕", exact: true });
+  await expect(captions.getByRole("button", { name: "跳转到第 1 条字幕", exact: true })).toBeVisible();
+  await captions.getByRole("button", { name: "跳转到第 1 条字幕", exact: true }).click();
+  await expect(page.locator("audio")).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await footer.getByRole("button", { name: "试听文稿", exact: true }).click();
+  const preview = footer.getByRole("group", { name: "文稿试听", exact: true });
+  await expect(preview.getByRole("slider", { name: "音频播放位置" })).toBeInViewport();
+  await expect(page.locator("audio")).toHaveCount(1);
+  await preview.getByRole("button", { name: "暂停音频", exact: true }).click();
+  await preview.getByRole("button", { name: "结束文稿试听", exact: true }).click();
+  await expect(footer.getByRole("group", { name: "配音播放", exact: true })).toBeVisible();
+  await editor.fill("修改后仍保留之前的配音。");
+  await expect(footer).toContainText("之前的生成版本");
+  await setMode(page, "slow");
+  await footer.getByRole("button", { name: "生成配音", exact: true }).click();
+  await expect(footer.locator(".job-progress")).toContainText("正在载入声音");
+  await expect(footer.locator(".job-progress").getByRole("button", { name: "取消", exact: true })).toBeInViewport();
+  expect(await page.locator("main").evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await footer.locator(".job-progress").getByRole("button", { name: "取消", exact: true }).click();
+  await expect(footer.locator(".job-progress")).toHaveCount(0);
+  await expect(editor).toHaveValue("修改后仍保留之前的配音。");
+  await page.screenshot({ path: "/tmp/vovo-shared-footer-small.png" });
+});
+
+test("顶栏统一品牌和设置；记录和工作台共用底栏，菜单不被底部截断", async ({ page }) => {
+  const titlebar = page.getByRole("banner");
+  await expect(titlebar.locator(".brand img")).toBeVisible();
+  expect((await titlebar.boundingBox())!.height).toBe(52);
+  await titlebar.getByRole("button", { name: "设置", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "配音准备", exact: true })).toBeVisible();
+  await expect(titlebar.getByRole("button", { name: "设置", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await openVoicePicker(page);
+  await page.keyboard.press("Escape");
+  await page.getByRole("textbox", { name: "文稿标题" }).fill("记录中的配音");
+  await page.getByRole("textbox", { name: "配音文稿" }).fill("这份文稿将保存在记录中。");
+  await page.getByRole("button", { name: "生成配音", exact: true }).click();
+  await page.getByRole("button", { name: "打开记录 记录中的配音", exact: true }).click();
+  const footer = page.getByRole("region", { name: "生成结果", exact: true });
+  await expect(footer).toBeInViewport();
+  await expect(page.getByRole("region", { name: "原始文稿", exact: true })).toContainText("这份文稿将保存在记录中。");
+  await footer.getByLabel("更多配音操作", { exact: true }).click();
+  await expect(footer.getByRole("button", { name: "导出位置与格式", exact: true })).toBeInViewport();
+  await footer.getByRole("button", { name: "导出位置与格式", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "导出配音与字幕", exact: true })).toBeVisible();
+});

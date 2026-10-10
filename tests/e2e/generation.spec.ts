@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { desktopFixture, setMode } from "./desktop.fixture";
+import { desktopFixture, openVoicePicker, setMode } from "./desktop.fixture";
 
 test.beforeEach(async ({ page }) => {
   await desktopFixture(page);
@@ -27,8 +27,8 @@ test("已有声音可直接生成，缺失声音由一键准备处理", async ({
   await page.getByRole("button", { name: "返回工作台" }).click();
   await page.getByRole("textbox", { name: "配音文稿" }).fill("这段文字使用已经缓存的声音。");
   await page.getByRole("button", { name: "生成配音", exact: true }).click();
-  await expect(page.locator(".result-panel")).toBeVisible();
-  await page.locator(".selected-voice-button").click();
+  await expect(page.locator(".studio-footer").filter({ has: page.getByRole("heading", { name: "未命名配音", exact: true }) })).toBeVisible();
+  await page.locator(".compose-voice").click();
   await page.getByRole("button", { name: "选择声音 中文女声 002", exact: true }).click();
   await page.getByRole("button", { name: "生成配音", exact: true }).click();
   await expect(page.getByRole("heading", { name: "先准备配音功能" })).toBeVisible();
@@ -47,25 +47,28 @@ test("生成、字幕校对、重新导出与记录使用同一份结果", async
   await expect(
     result.getByRole("button", { name: "播放音频", exact: true }),
   ).toBeVisible();
-  await result.getByRole("tab", { name: /字幕/ }).click();
-  await result.getByRole("button", { name: "校对字幕", exact: true }).click();
-  await result
+  await result.getByRole("button", { name: "字幕", exact: true }).click();
+  const captions = page.getByRole("dialog", { name: "字幕", exact: true });
+  await captions.getByRole("button", { name: "校对字幕", exact: true }).click();
+  await captions
     .getByRole("textbox", { name: "第 1 条字幕内容" })
     .fill("已经校对的字幕。");
   await expect(
     result.getByRole("button", { name: "导出文件", exact: true }),
   ).toBeDisabled();
-  await result.getByRole("button", { name: "保存字幕", exact: true }).click();
+  await captions.getByRole("button", { name: "保存字幕", exact: true }).click();
   await expect(page.locator(".toast")).toContainText("字幕已保存");
+  await captions.getByRole("button", { name: "关闭弹窗", exact: true }).click();
   await result.getByRole("button", { name: "导出文件", exact: true }).click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "导出 2 种文件", exact: true })
-    .click();
   await expect(page.locator(".toast")).toContainText("文件已导出");
-  await page.getByRole("button", { name: "生成记录", exact: false }).click();
-  await expect(page.locator(".history-item")).toHaveCount(1);
-  await expect(page.locator(".history-item")).toContainText("完整配音流程");
+  await result.getByRole("button", { name: "导出文件", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => (window as any).__STUDIO_TEST__.calls.filter((call: any) => call.command === "export_bundle").length)).toBe(2);
+  await expect(page.locator(".sidebar-record")).toHaveCount(1);
+  await page.getByRole("button", { name: "打开记录 完整配音流程", exact: true }).click();
+  await result.getByRole("button", { name: "字幕", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "字幕", exact: true })).toContainText("已经校对的字幕。");
+  await page.keyboard.press("Escape");
   const calls = await page.evaluate(
     () =>
       (
@@ -105,28 +108,27 @@ test("取消和失败保留之前的成功版本，旧任务事件不会串入",
   await page.getByRole("button", { name: "生成配音", exact: true }).click();
   await expect(page.locator(".toast")).toContainText("模型返回异常");
   await expect(page.getByRole("region", { name: "生成结果" })).toBeVisible();
-  await page.getByRole("button", { name: "生成记录", exact: false }).click();
-  await expect(page.locator(".history-item")).toHaveCount(1);
+  await expect(page.locator(".sidebar-record")).toHaveCount(1);
 });
 
 test("授权后一键导入并自动识别，校验保存后回到统一生成工作台", async ({ page }) => {
   await page
     .getByRole("textbox", { name: "配音文稿" })
     .fill("这段文稿用自己的声音朗读。");
-  await page.getByRole("button", { name: "声音库", exact: true }).click();
-  await page.getByRole("button", { name: "克隆声音", exact: true }).click();
+  await openVoicePicker(page);
+  await page.getByRole("button", { name: "创建我的声音", exact: true }).click();
   const wizard = page.getByRole("dialog");
   await expect(
-    wizard.getByRole("button", { name: "导入并识别", exact: false }),
+    wizard.getByRole("button", { name: "导入录音并识别文字", exact: true }),
   ).toBeDisabled();
-  await expect(wizard.getByRole("button", { name: "导入录音并识别文字", exact: false })).toBeDisabled();
+  await expect(wizard.getByRole("button", { name: "保存并使用声音", exact: true })).toBeDisabled();
   await wizard.getByRole("checkbox").check();
   await wizard
-    .getByRole("button", { name: "导入并识别", exact: false })
+    .getByRole("button", { name: "导入录音并识别文字", exact: true })
     .click();
   const transcript = wizard.getByRole("textbox", { name: "核对识别文字", exact: true });
   const confirmation = wizard.getByRole("checkbox", { name: "我已试听并确认文字与片段一致" });
-  const next = wizard.getByRole("button", { name: "确认并继续", exact: false });
+  const next = wizard.getByRole("button", { name: "保存并使用声音", exact: true });
   await expect(transcript).toHaveValue("这是参考录音里面实际说的话。");
   await expect(next).toBeDisabled();
   await confirmation.check();
@@ -135,7 +137,6 @@ test("授权后一键导入并自动识别，校验保存后回到统一生成�
   await expect(confirmation).not.toBeChecked();
   await expect(next).toBeDisabled();
   await confirmation.check();
-  await next.click();
   await wizard
     .getByRole("textbox", { name: "声音名称", exact: true })
     .fill("我的旁白");
@@ -145,10 +146,13 @@ test("授权后一键导入并自动识别，校验保存后回到统一生成�
   await expect(
     page.getByRole("heading", { name: "生成工作台", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".selected-voice-button")).toContainText(
+  await expect(page.locator(".compose-voice")).toContainText(
     "我的旁白",
   );
-  await expect(page.getByLabel("语速", { exact: true })).toHaveCount(0);
+  await page.getByLabel("调整语速", { exact: true }).click();
+  await page.getByRole("slider", { name: "配音语速", exact: true }).press("End");
+  await expect(page.getByRole("slider", { name: "配音语速", exact: true })).toHaveValue("1.3");
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("textbox", { name: "配音文稿" })).toHaveValue(
     "这段文稿用自己的声音朗读。",
   );
@@ -171,22 +175,22 @@ test("授权后一键导入并自动识别，校验保存后回到统一生成�
   const request = calls.find((call) => call.command === "generate_workspace" && !call.args.req.preview)!.args.req;
   expect(request.model).toBe("clone");
   expect(request.voice).toBe("saved-voice-1");
-  expect(request.speed).toBe(1);
+  expect(request.speed).toBe(1.3);
 });
 
 test("自动识别失败保留可试听片段，可手填或重试而不重复导入", async ({ page }) => {
   await page.evaluate(() => { (window as any).__STUDIO_TEST__.transcriptionMode = "error"; });
-  await page.getByRole("button", { name: "声音库", exact: true }).click();
-  await page.getByRole("button", { name: "克隆声音", exact: true }).click();
+  await openVoicePicker(page);
+  await page.getByRole("button", { name: "创建我的声音", exact: true }).click();
   const wizard = page.getByRole("dialog");
   await wizard.getByRole("checkbox").check();
-  await wizard.getByRole("button", { name: "导入并识别", exact: false }).click();
-  await expect(wizard.locator(".reference-preview")).toBeVisible();
-  await expect(wizard.getByText("未能自动识别。可以重新识别，或试听后手动补全文字。", { exact: true })).toBeVisible();
+  await wizard.getByRole("button", { name: "导入录音并识别文字", exact: true }).click();
+  await expect(wizard.locator(".audio-player")).toBeVisible();
+  await expect(wizard.getByText("未能自动识别。可以重试，也可以手动填写。", { exact: true })).toBeVisible();
   const transcript = wizard.getByRole("textbox", { name: "核对识别文字", exact: true });
   await transcript.fill("试听后手动补全的文字。");
   await wizard.getByRole("checkbox", { name: "我已试听并确认文字与片段一致" }).check();
-  await expect(wizard.getByRole("button", { name: "确认并继续", exact: false })).toBeEnabled();
+  await expect(wizard.getByRole("button", { name: "保存并使用声音", exact: true })).toBeEnabled();
   await page.evaluate(() => { (window as any).__STUDIO_TEST__.transcriptionMode = "success"; });
   await wizard.getByRole("button", { name: "重新识别", exact: true }).click();
   await expect(transcript).toHaveValue("这是参考录音里面实际说的话。");
@@ -197,38 +201,38 @@ test("自动识别失败保留可试听片段，可手填或重试而不重复�
 });
 
 test("取消重新识别保留校正文字，识别期间不可跳过校验", async ({ page }) => {
-  await page.getByRole("button", { name: "声音库", exact: true }).click();
-  await page.getByRole("button", { name: "克隆声音", exact: true }).click();
+  await openVoicePicker(page);
+  await page.getByRole("button", { name: "创建我的声音", exact: true }).click();
   const wizard = page.getByRole("dialog");
   await wizard.getByRole("checkbox").check();
-  await wizard.getByRole("button", { name: "导入并识别", exact: false }).click();
+  await wizard.getByRole("button", { name: "导入录音并识别文字", exact: true }).click();
   const transcript = wizard.getByRole("textbox", { name: "核对识别文字", exact: true });
   await expect(transcript).toHaveValue("这是参考录音里面实际说的话。");
   await transcript.fill("已经校正的文字，取消后仍保留。");
   await page.evaluate(() => { (window as any).__STUDIO_TEST__.transcriptionMode = "slow"; });
   await wizard.getByRole("button", { name: "重新识别", exact: true }).click();
   await expect(transcript).toBeDisabled();
-  await expect(wizard.getByRole("button", { name: "确认并继续", exact: false })).toBeDisabled();
+  await expect(wizard.getByRole("button", { name: "保存并使用声音", exact: true })).toBeDisabled();
   await expect(wizard.locator(".job-progress")).toContainText("正在识别片段文字");
   await expect(wizard.locator(".job-progress")).not.toContainText("99%");
   await wizard.locator(".job-progress").getByRole("button", { name: "取消", exact: true }).click();
-  await expect(wizard.getByText("识别已取消。可以重新识别，或试听后手动补全文字。", { exact: true })).toBeVisible();
+  await expect(wizard.getByText("识别已取消。可以重试，也可以手动填写。", { exact: true })).toBeVisible();
   await expect(transcript).toBeEnabled();
   await expect(transcript).toHaveValue("已经校正的文字，取消后仍保留。");
 });
 
 test("调整片段后重新读取与识别，旧文字不得直接用于新片段", async ({ page }) => {
-  await page.getByRole("button", { name: "声音库", exact: true }).click();
-  await page.getByRole("button", { name: "克隆声音", exact: true }).click();
+  await openVoicePicker(page);
+  await page.getByRole("button", { name: "创建我的声音", exact: true }).click();
   const wizard = page.getByRole("dialog");
   await wizard.getByRole("checkbox").check();
-  await wizard.getByRole("button", { name: "导入并识别", exact: false }).click();
+  await wizard.getByRole("button", { name: "导入录音并识别文字", exact: true }).click();
   await expect(wizard.getByRole("textbox", { name: "核对识别文字", exact: true })).toHaveValue("这是参考录音里面实际说的话。");
   await wizard.getByRole("checkbox", { name: "我已试听并确认文字与片段一致" }).check();
-  await wizard.locator("summary", { hasText: "调整参考片段" }).click();
+  await wizard.locator("summary", { hasText: "调整录音片段" }).click();
   await wizard.getByRole("spinbutton", { name: "从第几秒开始" }).fill("5");
   await wizard.getByRole("slider", { name: /片段长度/ }).press("Home");
-  await expect(wizard.getByRole("button", { name: "确认并继续", exact: false })).toBeDisabled();
+  await expect(wizard.getByRole("button", { name: "保存并使用声音", exact: true })).toBeDisabled();
   await expect(wizard.getByRole("button", { name: "重新识别", exact: true })).toBeDisabled();
   await page.evaluate(() => { (window as any).__STUDIO_TEST__.transcriptionText = "这是新选片段里说的话。"; });
   await wizard.getByRole("button", { name: "重新读取并识别", exact: true }).click();

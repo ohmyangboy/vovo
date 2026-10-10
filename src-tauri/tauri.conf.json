@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "VoiceStudio",
+  "productName": "vovo",
   "version": "0.1.0",
-  "identifier": "local.voicestudio",
+  "identifier": "local.vovo",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,10 @@
   "app": {
     "windows": [
       {
-        "title": "配音工坊",
+        "title": "vovo",
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": { "x": 16, "y": 28 },
         "width": 1120,
         "height": 820,
         "minWidth": 720,
@@ -29,7 +32,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "resources": ["resources/engine.py", "resources/clone_engine.py", "resources/text_processing.py", "resources/artifacts.py", "resources/transcription.py"],
+    "resources": ["resources/engine.py", "resources/clone_engine.py", "resources/clone_speech.py", "resources/text_processing.py", "resources/artifacts.py", "resources/transcription.py", "resources/app_paths.py"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
